@@ -102,13 +102,13 @@ main() {
         pushd exceptions
 
         # check that the disassembly matches
-        pushd app
-        diff -b app.objdump \
-             <(cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex --no-leading-addr)
-        diff -b app.vector_table.objdump \
-             <(cargo objdump --bin app --release -- -s -j .vector_table)
-        edition_check
-        popd
+     #    pushd app
+     #    diff -b app.objdump \
+     #         <(cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex --no-leading-addr)
+     #    diff -b app.vector_table.objdump \
+     #         <(cargo objdump --bin app --release -- -s -j .vector_table)
+     #    edition_check
+     #    popd
 
         # check that it builds
         pushd app2

@@ -1,10 +1,10 @@
-# The embedonomicon
+# 嵌入式宝典
 
 The embedonomicon walks you through the process of creating a `#![no_std]` application from scratch
 and through the iterative process of building architecture-specific functionality for Cortex-M
 microcontrollers.
 
-## Objectives
+## 目的
 
 By reading this book you will learn
 
@@ -18,7 +18,7 @@ By reading this book you will learn
 
 - A trick to implement default functionality that can be statically overridden (no runtime cost).
 
-## Target audience
+## 目标读者
 
 This book mainly targets to two audiences:
 
@@ -33,7 +33,7 @@ This book mainly targets to two audiences:
 [`msp430-rt`]: https://crates.io/crates/msp430-rt
 [`riscv-rt`]: https://crates.io/crates/riscv-rt
 
-## Translations
+## 翻译
 
 This book has been translated by generous volunteers. If you would like your
 translation listed here, please open a PR to add it.
@@ -41,7 +41,7 @@ translation listed here, please open a PR to add it.
 * [Japanese](https://tomoyuki-nakabayashi.github.io/embedonomicon/)
   ([repository](https://github.com/tomoyuki-nakabayashi/embedonomicon))
 
-## Requirements
+## 要求
 
 This book is self contained. The reader doesn't need to be familiar with the
 Cortex-M architecture, nor is access to a Cortex-M microcontroller needed -- all
@@ -108,7 +108,7 @@ $ # QEMU
 $ sudo apt install qemu-system-arm
 ```
 
-#### Ubuntu 18.04 or Debian
+#### Ubuntu 18.04 或者 Debian
 
 ``` console
 $ # gdb-multiarch -- use `gdb-multiarch` when you wish to invoke gdb
