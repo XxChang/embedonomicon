@@ -1,14 +1,14 @@
-# Summary
+# 摘要
 
-[Preface](./preface.md)
-- [The smallest `#![no_std]` program](./smallest-no-std.md)
-- [Memory layout](./memory-layout.md)
-- [A `main` interface](./main.md)
-- [Exception handling](./exceptions.md)
+[前言](./preface.md)
+- [最小的 `#![no_std]` 程序](./smallest-no-std.md)
+- [存储布局](./memory-layout.md)
+- [一个 `main` 接口](./main.md)
+- [异常处理](./exceptions.md)
 - [Assembly on stable](./asm.md)
 - [Logging with symbols](./logging.md)
-- [Global singletons](./singleton.md)
+- [全局单例](./singleton.md)
 - [DMA](./dma.md)
 ---
 [A note on compiler support](./compiler-support.md)
-[Creating a custom target](./custom-target.md)
+[制造一个自定义目标](./custom-target.md)
