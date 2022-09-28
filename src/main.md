@@ -1,16 +1,14 @@
-# A `main` interface
+# 一个 `main` 接口
 
-We have a minimal working program now, but we need to package it in a way that the end user can build
-safe programs on top of it. In this section, we'll implement a `main` interface like the one standard
-Rust programs use.
+我们现在有了一个可以工作的最小的程序，但是我们需要用一个方法将它打包起来，这个方法可以让终端用户在其上搭建安全的程序。这部分，我们将实现一个 `main` 接口，就像一个标准的Rust程序所用的那样。
 
-First, we'll convert our binary crate into a library crate:
+首先，我们将把我们的binary crate转换成一个library crate:
 
 ``` console
 $ mv src/main.rs src/lib.rs
 ```
 
-And then rename it to `rt` which stands for "runtime".
+然后把它重命名为 `rt`，其表示"runtime" 。
 
 ``` console
 $ sed -i s/app/rt/ Cargo.toml
@@ -22,7 +20,7 @@ $ head -n4 Cargo.toml
 {{#include ../ci/main/rt/Cargo.toml:1:4}}
 ```
 
-The first change is to have the reset handler call an external `main` function:
+第一个改变是让重置处理函数调用一个外部的 `main` 函数:
 
 ``` console
 $ head -n13 src/lib.rs
@@ -32,23 +30,19 @@ $ head -n13 src/lib.rs
 {{#include ../ci/main/rt/src/lib.rs:1:13}}
 ```
 
-We also drop the `#![no_main]` attribute as it has no effect on library crates.
+我们也去掉了 `#![no_main]` 属性，因为它对library crates没有影响。
 
-> There's an orthogonal question that arises at this stage: Should the `rt`
-> library provide a standard panicking behavior, or should it *not* provide a
-> `#[panic_handler]` function and leave the end user to choose the panicking
-> behavior? This document won't delve into that question and for simplicity will
-> leave the dummy `#[panic_handler]` function in the `rt` crate. However, we
-> wanted to inform the reader that there are other options.
+> 这个阶段存在一个正交问题: `rt`库应该提供一个标准的恐慌时行为吗，
+> 或者它不应该提供一个 `#[panic_handler]` 函数而让终端用户去选
+> 择恐慌时行为吗？这个文档将不会深入这个问题，且为了简洁性，在`rt` crate
+> 中留了一个空的 `#[panic_handler]` 函数。然而，我们想告诉读者存在其它选择。
 
-The second change involves providing the linker script we wrote before to the application crate. The linker will search for linker scripts in the library search path (`-L`) and in the directory
-from which it's invoked. The application crate shouldn't need to carry around a copy of `link.x` so
-we'll have the `rt` crate put the linker script in the library search path using a [build script].
+第二个改变涉及到给应用crate提供我们之前写的链接器脚本。链接器将会在库搜索路径(`-L`)和它被调用的文件夹中寻找链接器脚本。应用crate不应该需要将`link.x`的副本挪来挪去所以我们将使用一个[build script]让 `rt` crate 将链接器脚本放到库搜索路径中。
 
 [build script]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
 
 ``` console
-$ # create a build.rs file in the root of `rt` with these contents
+$ # 在`rt`的根目录中生成一个带有这些内容的 build.rs 文件
 $ cat build.rs
 ```
 
@@ -56,8 +50,7 @@ $ cat build.rs
 {{#include ../ci/main/rt/build.rs}}
 ```
 
-Now the user can write an application that exposes the `main` symbol and link it to the `rt` crate.
-The `rt` will take care of giving the program the right memory layout.
+现在用户可以写一个暴露了`main`符号的应用了，且将它链接到`rt` crate上。`rt` 将负责给予程序正确的存储布局。
 
 ``` console
 $ cd ..
@@ -66,7 +59,7 @@ $ cargo new --edition 2018 --bin app
 
 $ cd app
 
-$ # modify Cargo.toml to include the `rt` crate as a dependency
+$ # 修改Cargo.toml将`rt` crate包含进来作为一个依赖
 $ tail -n2 Cargo.toml
 ```
 
@@ -75,10 +68,10 @@ $ tail -n2 Cargo.toml
 ```
 
 ``` console
-$ # copy over the config file that sets a default target and tweaks the linker invocation
+$ # 拷贝整个设置了一个默认目标的config文件并修改链接器命令
 $ cp -r ../rt/.cargo .
 
-$ # change the contents of `main.rs` to
+$ # 把 `main.rs` 的内容改成
 $ cat src/main.rs
 ```
 
@@ -86,7 +79,7 @@ $ cat src/main.rs
 {{#include ../ci/main/app/src/main.rs}}
 ```
 
-The disassembly will be similar but will now include the user `main` function.
+反汇编将是相似的，除了现在包含了用户的`main`函数。
 
 ``` console
 $ cargo objdump --bin app -- -d --no-show-raw-insn
@@ -96,14 +89,11 @@ $ cargo objdump --bin app -- -d --no-show-raw-insn
 {{#include ../ci/main/app/app.objdump}}
 ```
 
-## Making it type safe
+## 把它变成类型安全的
 
-The `main` interface works, but it's easy to get it wrong. For example, the user could write `main`
-as a non-divergent function, and they would get no compile time error and undefined behavior (the
-compiler will misoptimize the program).
+`main` 接口工作了，但是它容易出错。比如，用户可以把`main`写成一个non-divergent function，它们将不会出现编译时错误并带来未定义的行为(编译器将会错误优化这个程序)。
 
-We can add type safety by exposing a macro to the user instead of the symbol interface. In the
-`rt` crate, we can write this macro:
+我们通过暴露一个宏给用户而不是符号接口可以添加类型安全性。在 `rt` crate 中，我们可以写这个宏:
 
 ``` console
 $ tail -n12 ../rt/src/lib.rs
@@ -113,7 +103,7 @@ $ tail -n12 ../rt/src/lib.rs
 {{#include ../ci/main/rt/src/lib.rs:25:37}}
 ```
 
-Then the application writers can invoke it like this:
+然后应用的作者可以像这样调用它:
 
 ``` console
 $ cat src/main.rs
@@ -123,19 +113,16 @@ $ cat src/main.rs
 {{#include ../ci/main/app2/src/main.rs}}
 ```
 
-Now the author will get an error if they change the signature of `main` to be
-non divergent function, e.g. `fn()`.
+如果作者把`main`的签名改成non divergent function，比如 `fn` ，将会出现一个错误。
 
-## Life before main
+## main之前的生活
 
-`rt` is looking good but it's not feature complete! Applications written against it can't use
-`static` variables or string literals because `rt`'s linker script doesn't define the standard
-`.bss`, `.data` and `.rodata` sections. Let's fix that!
+`rt` 看起来不错了，但是它的功能不够完整！用它编写的应用不能使用 `static` 变量或者字符串字面值，因为 `rt` 的链接器脚本没有定义标准的`.bss`，`.data` 和 `.rodata` sections 。让我们修复它！
 
-The first step is to define these sections in the linker script:
+第一步是在链接器脚本中定义这些sections:
 
 ``` console
-$ # showing just a fragment of the file
+$ # 只展示文件的一小块
 $ sed -n 25,46p ../rt/link.x
 ```
 
@@ -143,29 +130,22 @@ $ sed -n 25,46p ../rt/link.x
 {{#include ../ci/main/rt/link.x:25:46}}
 ```
 
-They just re-export the input sections and specify in which memory region each output section will
-go.
+它们只是重新导出input sections并指定每个output section将会进入哪个内存区域。
 
-With these changes, the following program will compile:
+有了这些改变，下面的程序将会编译:
 
 ``` rust
 {{#include ../ci/main/app3/src/main.rs}}
 ```
 
-However if you run this program on real hardware and debug it, you'll observe that the `static`
-variables `BSS` and `DATA` don't have the values `0` and `1` by the time `main` has been reached.
-Instead, these variables will have junk values. The problem is that the contents of RAM are
-random after powering up the device. You won't be able to observe this effect if you run the
-program in QEMU.
+然而如果你在正真的硬件上运行这个程序并调试它，你将发现到达`main`时，`static` 变量 `BSS` 和 `DATA` 没有 `0` 和 `1` 值。反而，这些变量将是垃圾值。问题是在设备上电之后，RAM的内容是随机的。如果你在QEMU中运行这个程序，你将看不到这个影响。
 
-As things stand if your program reads any `static` variable before performing a write to it then
-your program has undefined behavior. Let's fix that by initializing all `static` variables before
-calling `main`.
+在目前的情况下，如果你的程序在对`static`变量执行一个写入之前，读取任何 `static` 变量，那么你的程序会出现未定义的行为。让我们通过在调用`main`之前初始化所有的`static`变量来修复它。
 
-We'll need to tweak the linker script a bit more to do the RAM initialization:
+我们将需要修改下链接器脚本去进行RAM初始化:
 
 ``` console
-$ # showing just a fragment of the file
+$ # 只展示文件的一块
 $ sed -n 25,52p ../rt/link.x
 ```
 
@@ -191,30 +171,21 @@ Let's go into the details of these changes:
 {{#include ../ci/main/rt2/link.x:47}}
 ```
 
-We associate symbols to the start and end addresses of the `.bss` and `.data` sections, which we'll
-later use from Rust code.
+我们将符号关联到`.bss`和`.data` sections的开始和末尾地址，我之后将会从Rust代码中使用。
 
 ``` text
 {{#include ../ci/main/rt2/link.x:43}}
 ```
 
-We set the Load Memory Address (LMA) of the `.data` section to the end of the `.rodata`
-section. The `.data` contains `static` variables with a non-zero initial value; the Virtual Memory
-Address (VMA) of the `.data` section is somewhere in RAM -- this is where the `static` variables are
-located. The initial values of those `static` variables, however, must be allocated in non volatile
-memory (Flash); the LMA is where in Flash those initial values are stored.
+我们将`.data` section的加载内存地址(LMA)设置成`.rodata` section的末尾处。`.data` 包含具有一个非零的初始值的`static`变量；`.data` section的虚拟内存地址(VMA)在RAM中的某处 -- 这是`static`变量所在的地方。这些`static`变量的初始值，然而，必须被分配在非易失存储中(Flash)；LMA是Flash中存放这些初始值的地方。
 
 ``` text
 {{#include ../ci/main/rt2/link.x:50}}
 ```
 
-Finally, we associate a symbol to the LMA of `.data`.
+最后，我们将一个符号和`.data`的LMA关联起来。我们可以从Rust代码引用我们在链接器脚本中生成的符号。这些符号的*地址*[^1]是 `.bss` 和 `.data` sections的边界处。
 
-On the Rust side, we zero the `.bss` section and initialize the `.data` section. We can reference
-the symbols we created in the linker script from the Rust code. The *addresses*[^1] of these symbols are
-the boundaries of the `.bss` and `.data` sections.
-
-The updated reset handler is shown below:
+下面展示的是更新了的重置处理函数:
 
 ``` console
 $ head -n32 ../rt/src/lib.rs
@@ -224,15 +195,10 @@ $ head -n32 ../rt/src/lib.rs
 {{#include ../ci/main/rt2/src/lib.rs:1:31}}
 ```
 
-Now end users can directly and indirectly make use of `static` variables without running into
-undefined behavior!
+现在终端用户可以直接地和间接地使用`static`变量而不会导致未定义的行为!
 
-> In the code above we performed the memory initialization in a bytewise fashion. It's possible to
-> force the `.bss` and `.data` sections to be aligned to, say, 4 bytes. This fact can then be used
-> in the Rust code to perform the initialization wordwise while omitting alignment checks. If you
-> are interested in learning how this can be achieved check the [`cortex-m-rt`] crate.
+> 我们上面展示的代码中，内存的初始化按照一种逐字节的方式进行。可以强迫 `.bss` 和 `.data` section对齐，比如，四个字节。然后Rust代码可以利用这个事实去执行逐字的初始化而不需要对齐检查。如果你想知道这是如何做到，看下 [`cortex-m-rt`] crate 。
 
 [`cortex-m-rt`]: https://github.com/japaric/cortex-m-rt/tree/v0.5.1
 
-[^1]: The fact that the addresses of the linker script symbols must be used here can be confusing and
-unintuitive. An elaborate explanation for this oddity can be found [here](https://stackoverflow.com/a/40392131).
+[^1]: 必须在这使用链接器脚本符号这件事会让人疑惑且反直觉。可以在[这里](https://stackoverflow.com/a/40392131)找到与这个怪现象有关的详尽解释。
