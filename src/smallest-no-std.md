@@ -1,8 +1,8 @@
-# The smallest `#![no_std]` program
+# 最小的 `#![no_std]` 程序
 
-In this section we'll write the smallest `#![no_std]` program that *compiles*.
+在这部分，我们将写一个可以*编译*的最小的 `#![no_std]` 程序。
 
-## What does `#![no_std]` mean?
+## `#![no_std]` 什么意思?
 
 `#![no_std]` is a crate level attribute that indicates that the crate will link to the [`core`]
 crate instead of the [`std`] crate, but what does this mean for applications?

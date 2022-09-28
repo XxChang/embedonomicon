@@ -6,12 +6,9 @@ microcontrollers.
 
 ## 目的
 
-By reading this book you will learn
+通过阅读这本书你将会学到
 
-- How to build a `#![no_std]` application. This is much more complex than building a `#![no_std]`
-  library because the target system may not be running an OS (or you could be aiming to build an
-  OS!) and the program could be the only process running in the target (or the first one).
-  In that case, the program may need to be customized for the target system.
+- 搭建一个 `#![no_std]` 应用。这比搭建一个 `#![no_std]` 库更复杂，因为目标系统可能没有运行一个OS(或者你的目标就是搭建一个OS!)，而且你的程序可能是目标中运行的唯一进程(或者第一个进程)。在这种情况下，程序可能需要为目标系统进行定制。
 
 - Tricks to finely control the memory layout of a Rust program. You'll learn about linkers, linker
   scripts and about the Rust features that let you control a bit of the ABI of Rust programs.
