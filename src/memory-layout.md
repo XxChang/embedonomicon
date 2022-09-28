@@ -1,58 +1,38 @@
-# Memory layout
+# 存储布局
 
-The next step is to ensure the program has the right memory layout so that the target system will be
-able to execute it. In our example, we'll be working with a virtual Cortex-M3 microcontroller: the
-[LM3S6965]. Our program will be the only process running on the device so it must also take care of
-initializing the device.
+下一步是确保程序有正确的存储布局，因此目标系统才可以执行它。在我们的例子里，我将使用一个虚拟的Cortex-M3微控制器: [LM3S6965] 。我们的程序是运行在设备上的唯一一个进程，因此它也必须要负责初始化设备。
 
-## Background information
+## 背景信息
 
 [LM3S6965]: http://www.ti.com/product/LM3S6965
 
-Cortex-M devices require a [vector table] to be present at the start of their [code memory region].
-The vector table is an array of pointers; the first two pointers are required to boot the device,
-the rest of the pointers are related to exceptions. We'll ignore them for now.
+Cortex-M 设备需要[向量表]放在它们[代码区]的开始处。
+向量表是一组指针；启动设备需要前两个指针，剩下来的指针都与异常有关。我们现在忽略它们。
 
-[code memory region]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/memory-model
-[vector table]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/exception-model/vector-table
+[代码区]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/memory-model
+[向量表]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/exception-model/vector-table
 
-Linkers decide the final memory layout of programs, but we can use [linker scripts] to have some
-control over it. The control granularity that linker scripts give us over the layout
-is at the level of *sections*. A section is a collection of *symbols* laid out in contiguous memory.
-Symbols, in turn, can be data (a static variable), or instructions (a Rust function).
+链接器决定程序的最终存储布局，但是我们可以用[链接器脚本]对它进行一些控制。链接器提供的控制布局的精细度在*sections*层级。一个section是分布在连续存储中的*符号*的集合。符号，依次，可以是数据(一个静态变量)，或者指令(一个Rust函数)。
 
-[linker scripts]: https://sourceware.org/binutils/docs/ld/Scripts.html
+[链接器脚本]: https://sourceware.org/binutils/docs/ld/Scripts.html
 
-Every symbol has a name assigned by the compiler. As of Rust 1.28 , the names that the Rust compiler
-assigns to symbols are of the form: `_ZN5krate6module8function17he1dfc17c86fe16daE`, which demangles to
-`krate::module::function::he1dfc17c86fe16da` where `krate::module::function` is the path of the
-function or variable and `he1dfc17c86fe16da` is some sort of hash. The Rust compiler will place each
-symbol into its own unique section; for example the symbol mentioned before will be placed in a
-section named `.text._ZN5krate6module8function17he1dfc17c86fe16daE`.
+每一个符号有一个由编译器分配的名字。自Rust 1.28以来，Rust编译器分配给符号的名字都是这样的格式:
+`_ZN5krate6module8function17he1dfc17c86fe16daE`，其展开是 `krate::module::function::he1dfc17c86fe16da` 其中 `krate::module::function` 是函数或者变量的路径，`he1dfc17c86fe16da` 某个哈希值。Rust编译器将把每个符号放进它自己的独有的section中；比如之前提到的符号将被放进一个名为 `.text._ZN5krate6module8function17he1dfc17c86fe16daE` 的section中。
 
-These compiler generated symbol and section names are not guaranteed to remain constant across
-different releases of the Rust compiler. However, the language lets us control symbol names and
-section placement via these attributes:
+这些编译器产生的符号和section名在不同的Rust编译器发布版中不保证是不变的。然而，语言让我们可以使用这些属性控制符号名和放置的section:
 
-- `#[export_name = "foo"]` sets the symbol name to `foo`.
-- `#[no_mangle]` means: use the function or variable name (not its full path) as its symbol name.
-  `#[no_mangle] fn bar()` will produce a symbol named `bar`.
-- `#[link_section = ".bar"]` places the symbol in a section named `.bar`.
+- `#[export_name = "foo"]` 把符号名设置成 `foo` 。
+- `#[no_mangle]` 意思是: 使用函数或者变量名(不是它的全路径)作为它的符号名。
+  `#[no_mangle] fn bar()` 将产生一个名为 `bar` 的符号。
+- `#[link_section = ".bar"]` 把符号放进一个名为 `.bar` 的section中。
 
-With these attributes, we can expose a stable ABI of the program and use it in the linker script.
+有了这些属性，我们可以暴露一个程序的稳定的ABI，并在链接器脚本中使用它。
 
-## The Rust side
+## Rust 部分
 
-As mentioned above, for Cortex-M devices, we need to populate the first two entries of the
-vector table. The first one, the initial value for the stack pointer, can be populated using
-only the linker script. The second one, the reset vector, needs to be created in Rust code
-and placed correctly using the linker script.
+像上面提到的，对于Cortex-M设备，我们需要修改向量表的前两项。第一个，栈指针的初始值，只能使用链接器脚本修改。第二个，重置向量，需要在Rust代码中生成并使用链接器脚本放置到正确的地方。
 
-The reset vector is a pointer into the reset handler. The reset handler is the function that the
-device will execute after a system reset, or after it powers up for the first time. The reset
-handler is always the first stack frame in the hardware call stack; returning from it is undefined
-behavior as there's no other stack frame to return to. We can enforce that the reset handler never
-returns by making it a divergent function, which is a function with signature `fn(/* .. */) -> !`.
+重置向量是一个指向重置处理函数的指针。重置处理函数是在一个系统重启后设备将会执行的函数，或者第一次上电后。重置处理函数总是硬件调用栈中的第一个栈帧；从它返回是未定义的行为，因为没有其它栈帧可以给它返回。通过让它变成一个divergent function，我们可以强调这个重置处理函数从来不会返回，divergent function的签名是 `fn(/* .. */) -> !` 。
 
 ``` rust
 {{#include ../ci/memory-layout/src/main.rs:7:19}}
@@ -162,7 +142,7 @@ Finally, we use the special `/DISCARD/` section to discard
 input sections named `.ARM.exidx.*`. These sections are related to exception handling but we are not
 doing stack unwinding on panics and they take up space in Flash memory, so we just discard them.
 
-## Putting it all together
+## 全放到一起去
 
 Now we can link the application. For reference, here's the complete Rust program:
 
@@ -199,10 +179,10 @@ $ cat .cargo/config
 The `[target.thumbv7m-none-eabi]` part says that these flags will only be used
 when cross compiling to that target.
 
-## Inspecting it
+## 检查它
 
-Now let's inspect the output binary to confirm the memory layout looks the way we want
-(this requires [`cargo-binutils`](https://github.com/rust-embedded/cargo-binutils#readme)):
+现在让我们检查下输出的二进制项，确保存储布局跟我们想要的一样
+(这需要 [`cargo-binutils`](https://github.com/rust-embedded/cargo-binutils#readme)):
 
 ``` console
 $ cargo objdump --bin app -- -d --no-show-raw-insn
@@ -212,8 +192,7 @@ $ cargo objdump --bin app -- -d --no-show-raw-insn
 {{#include ../ci/memory-layout/app.text.objdump}}
 ```
 
-This is the disassembly of the `.text` section. We see that the reset handler, named `Reset`, is
-located at address `0x8`.
+这是 `.text` section的反汇编。我们看到重置处理函数，名为 `Reset`，位于 `0x8` 地址。
 
 ``` console
 $ cargo objdump --bin app -- -s --section .vector_table
@@ -223,19 +202,14 @@ $ cargo objdump --bin app -- -s --section .vector_table
 {{#include ../ci/memory-layout/app.vector_table.objdump}}
 ```
 
-This shows the contents of the `.vector_table` section. We can see that the section starts at
-address `0x0` and that the first word of the section is `0x2001_0000` (the `objdump` output is in
-little endian format). This is the initial SP value and matches the end address of RAM. The second
-word is `0x9`; this is the *thumb mode* address of the reset handler. When a function is to be
-executed in thumb mode the first bit of its address is set to 1.
+这是 `.vector_table` section 的内容。我们可以看到section开始于地址 `0x0` 且 section 的第一个字是 `0x2001_0000` (`objdump` 的输出是小端模式)。这是初始的SP值，它与RAM的末尾地址匹配。第二个字是 `0x9`；这是重置处理函数的 *thumb mode* 地址。当一个函数运行在thumb mode下，它的地址的第一位被设置成1 。
 
-## Testing it
+## 测试它
 
-This program is a valid LM3S6965 program; we can execute it in a virtual microcontroller (QEMU) to
-test it out.
+这个程序是一个有效的LM3S6965程序；我们可以在一个虚拟微控制器(QEMU)中执行它去测试。
 
 ``` console
-$ # this program will block
+$ # 这个程序将会阻塞住
 $ qemu-system-arm \
       -cpu cortex-m3 \
       -machine lm3s6965evb \
@@ -246,7 +220,7 @@ $ qemu-system-arm \
 ```
 
 ``` console
-$ # on a different terminal
+$ # 在一个不同的终端上
 $ arm-none-eabi-gdb -q target/thumbv7m-none-eabi/debug/app
 Reading symbols from target/thumbv7m-none-eabi/debug/app...done.
 
