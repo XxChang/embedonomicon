@@ -13,18 +13,13 @@ Cortex-M异常机制工作起来像这样:
 
 像之前提到的，处理器希望向量表在存储中某个特定的位置，在运行时处理器可能用到表中的每一项。因此，表中的各项必须包含有效的值。此外，我们希望`rt` crate是灵活的，因此终端用户可以定制每个异常处理函数的行为。最后，向量表要坐落在只读存储中，或者有些在不那么容易被修改的存储中，因此用户必须静态地注册处理函数，而不是在运行时。
 
-To satisfy all these constraints, we'll assign a *default* value to all the entries of the vector
-table in the `rt` crate, but make these values kind of *weak* to let the end user override them
-at compile time.
+为了满足所有的这些需求，我们将给`rt` crate中的向量表所有的项分配一个*默认值*，但是让这些值变*弱*以让终端用户可以在编译时重载它们。
 
-## Rust side
+## Rust部分
 
-Let's see how all this can be implemented. For simplicity, we'll only work with the first 16 entries
-of the vector table; these entries are not device specific so they have the same function on any
-kind of Cortex-M microcontroller.
+让我们看下所有这些如何被实现。为了间接性，我们将只使用向量表的前16个项；这些项不是特定于设备的，所以它们在所有类型的Cotex-M微控制器上都有相同的功能。
 
-The first thing we'll do is create an array of vectors (pointers to exception handlers) in the
-`rt` crate's code:
+我们做的第一件事是在`rt` create的代码中创造一个向量(指向异常处理函数的指针)数组:
 
 ``` console
 $ sed -n 56,91p ../rt/src/lib.rs
@@ -34,13 +29,9 @@ $ sed -n 56,91p ../rt/src/lib.rs
 {{#include ../ci/exceptions/rt/src/lib.rs:56:91}}
 ```
 
-Some of the entries in the vector table are *reserved*; the ARM documentation states that they
-should be assigned the value `0` so we use a union to do exactly that. The entries that must point
-to a handler make use of *external* functions; this is important because it lets the end user
-*provide* the actual function definition.
+向量表中的一些项是*保留的*；ARM文档说它们应该被分配 `0` 值，所以我们使用一个联合体来完成它。必须指向一个处理函数的项使用的是*external*函数；这很重要，因为它让终端用户来*提供*实际的函数定义。
 
-Next, we define a default exception handler in the Rust code. Exceptions that have not been assigned
-a handler by the end user will make use of this default handler.
+接下来，我们在Rust代码中定义一个默认的异常处理函数。没有被终端用户分配的异常将使用这个默认处理函数。
 
 ``` console
 $ tail -n4 ../rt/src/lib.rs
@@ -50,9 +41,9 @@ $ tail -n4 ../rt/src/lib.rs
 {{#include ../ci/exceptions/rt/src/lib.rs:93:97}}
 ```
 
-## Linker script side
+## 链接器脚本部分
 
-On the linker script side, we place these new exception vectors right after the reset vector.
+在链接器脚本那部分，我们将这些新的异常向量放在重置向量之后。
 
 ``` console
 $ sed -n 12,25p ../rt/link.x
@@ -62,8 +53,7 @@ $ sed -n 12,25p ../rt/link.x
 {{#include ../ci/exceptions/rt/link.x:12:27}}
 ```
 
-And we use `PROVIDE` to give a default value to the handlers that we left undefined in `rt` (`NMI`
-and the others above):
+并且我们使用 `PROVIDE` 给我们在`rt`中未定义的处理函数赋予一个默认值 (`NMI`和上面的其它处理函数):
 
 ``` console
 $ tail -n8 ../rt/link.x
@@ -80,21 +70,16 @@ PROVIDE(PendSV = DefaultExceptionHandler);
 PROVIDE(SysTick = DefaultExceptionHandler);
 ```
 
-`PROVIDE` only takes effect when the symbol to the left of the equal sign is still undefined after
-inspecting all the input object files. This is the scenario where the user didn't implement the
-handler for the respective exception.
+当检测完所有的输入对象文件而等号左侧的符号仍然没有定义的时候，`PROVIDE` 才会发挥作用。也就是用户没有为相关的异常实现处理函数。
 
-## Testing it
+## 测试它
 
-That's it! The `rt` crate now has support for exception handlers. We can test it out with following
-application:
+这就完了！`rt` crate现在支持异常处理函数了。我们可以用下列的应用测试它:
 
-> **NOTE**: Turns out it's hard to generate an exception in QEMU. On real
-> hardware a read to an invalid memory address (i.e. outside of the Flash and
-> RAM regions) would be enough but QEMU happily accepts the operation and
-> returns zero. A trap instruction works on both QEMU and hardware but
-> unfortunately it's not available on stable so you'll have to temporarily
-> switch to nightly to run this and the next example.
+> **注意**: 在QEMU中生成一个异常很难。在实际的硬件上对一个无效的存储地址进行
+> 一个读取是足够产生一个中断的，但是QEMU却能接受这个操作并且返回零。一个陷入指
+> 令在QEMU和硬件上都可以发挥作用，但是不幸的是在稳定版上不可以用它，所以你需要
+> 暂时切换到nightly版本中去运行这个和下个示例。
 
 ``` rust
 {{#include ../ci/exceptions/app/src/main.rs}}
@@ -126,7 +111,7 @@ Breakpoint 1, DefaultExceptionHandler ()
 96      }
 ```
 
-And for completeness, here's the disassembly of the optimized version of the program:
+为了完整性，这里列出程序被优化过的版本的反汇编:
 
 ``` console
 $ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
@@ -144,47 +129,30 @@ $ cargo objdump --bin app --release -- -s -j .vector_table
 {{#include ../ci/exceptions/app/app.vector_table.objdump}}
 ```
 
-The vector table now resembles the results of all the code snippets in this book
-  so far. To summarize:
-- In the [_Inspecting it_] section of the earlier memory chapter, we learned
-  that:
-    - The first entry in the vector table contains the initial value of the
-      stack pointer.
-    - Objdump prints in `little endian` format, so the stack starts at
-      `0x2001_0000`.
-    - The second entry points to address `0x0000_0045`, the Reset handler.
-        - The address of the Reset handler can be seen in the disassembly above,
-          being `0x44`.
-        - The first bit being set to 1 does not alter the address due to
-          alignment requirements. Instead, it causes the function to be executed
-          in _thumb mode_.
-- Afterwards, a pattern of addresses alternating between `0x83` and `0x00` is
-  visible.
-    - Looking at the disassembly above, it is clear that `0x83` refers to the
-      `DefaultExceptionHandler` (`0x84` executed in thumb mode).
-    - Cross referencing the pattern to the vector table that was set up earlier
-      in this chapter (see the definition of `pub static EXCEPTIONS`) with [the
-      vector table layout for the Cortex-M], it is clear that the address of the
-      `DefaultExceptionHandler` is present each time a respective handler entry
-      is present in the table.
-    - In turn, it is also visible that the layout of the vector table data
-      structure in the Rust code is aligned with all the reserved slots in the
-      Cortex-M vector table. Hence, all reserved slots are correctly set to a
-      value of zero.
+向量表现在像是集合了这本书中迄今为止所有的代码片段。总结下:
+- 在早期的存储章节的[_检查它_]部分，我们知道了:
+    - 向量表中第一项包含了栈指针的初始值。
+    - Objdump使用`小端`格式打印，所以栈开始于 `0x2001_0000` 。
+    - 第二项指向地址 `0x0000_0045`，重置处理函数。
+        - 在上面的反汇编中可以看到重置处理函数的地址，是 `0x44` 。
+        - 由于对齐的要求被设置成1的第一位不会改变地址。而是，它让函数在 _thumb mode_ 下执行。
+- 之后，可以看到在`0x83`和`0x00`之间交替的地址模式。
+    - 看下上面的反汇编，很明显 `0x83` 指的是 `DefaultExceptionHandler` (`0x84`用thumb模式执行)。
+    - 来回查看在这个章节早期所设置的向量表和[Cortex-M的向量表布局]的模式，很明显每次有个处理函数项出现在表中，`DefaultExceptionHandler`的地址就会出现。
+    - 可以看到Rust代码中的向量表的数据结构的布局与Cortex-M向量表中的保留项依次对齐了。因此，所有的保留项被正确的设置成了零值。
 
-[_Inspecting it_]: https://docs.rust-embedded.org/embedonomicon/memory-layout.html#inspecting-it
-[the vector table layout for the Cortex-M]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/exception-model/vector-table
+[_检查它_]: https://xxchang.github.io/embedonomicon/memory-layout.html#inspecting-it
+[Cortex-M的向量表布局]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/exception-model/vector-table
 
-## Overriding a handler
+## 重载一个处理函数
 
-To override an exception handler, the user has to provide a function whose symbol name exactly
-matches the name we used in `EXCEPTIONS`.
+为了重载一个异常处理函数，用户必须提供一个函数，其符号名完全匹配我们在`EXCEPTIONS`中使用的名字。
 
 ``` rust
 {{#include ../ci/exceptions/app2/src/main.rs}}
 ```
 
-You can test it in QEMU
+你可以在QEMU中测试它
 
 ``` console
 (gdb) target remote :3333
@@ -213,11 +181,7 @@ Breakpoint 1, HardFault () at src/main.rs:18
 
 程序现在执行了用户定义的`HardFault`函数而不是`rt` crate中的`DefaultExceptionHandler` 。
 
-Like our first attempt at a `main` interface, this first implementation has the problem of having no
-type safety. It's also easy to mistype the name of the exception, but that doesn't produce an error
-or warning. Instead the user defined handler is simply ignored. Those problems can be fixed using a
-macro like the [`exception!`] macro defined in `cortex-m-rt` v0.5.x or the
-[`exception`] attribute in `cortex-m-rt` v0.6.x.
+与我们在一个`main`接口中进行的第一次尝试一样，这个实现的问题是没有类型安全性。它也容易混淆异常的名字，但是不会生成一个错误或者警告。而是仅仅忽略用户定义的处理函数。这些问题可以使用一个像是在`cortex-m-rt` v0.5.x 中定义的[`exception!`]宏和`cortex-m-rt` v0.6.x中的[`exception`]属性来解决。
 
 [`exception!`]: https://github.com/japaric/cortex-m-rt/blob/v0.5.1/src/lib.rs#L792
 [`exception`]: https://github.com/rust-embedded/cortex-m-rt/blob/v0.6.3/macros/src/lib.rs#L254
