@@ -1,33 +1,17 @@
-# Exception handling
+# 异常处理
 
-During the "Memory layout" section, we decided to start out simple and leave out handling of
-exceptions. In this section, we'll add support for handling them; this serves as an example of
-how to achieve compile time overridable behavior in stable Rust (i.e. without relying on the
-unstable `#[linkage = "weak"]` attribute, which makes a symbol weak).
+在"存储布局"部分，我们决定从简单处开始并忽略异常的处理。在这部分，我们将添加与处理它们有关的支持；这作为如何在稳定版的Rust中(比如 不依赖不稳定的 `#[linkage = "weak"]` 属性，它让一个符号变成弱链接)实现编译时可重载的行为的示例。
 
-## Background information
+## 背景信息
 
-In a nutshell, *exceptions* are a mechanism the Cortex-M and other architectures provide to let
-applications respond to asynchronous, usually external, events. The most prominent type of exception,
-that most people will know, is the classical (hardware) interrupt.
+简而言之，*异常*是Cortex-M和其它架构提供的一个机制，为了让应用可以响应异步，通常是外部的，事件。异常最常见的类型，大多数人将知道的，是经典的(硬件)中断。
 
-The Cortex-M exception mechanism works like this:
-When the processor receives a signal or event associated to a type of exception, it suspends
-the execution of the current subroutine (by stashing the state in the call stack) and then proceeds
-to execute the corresponding exception handler, another subroutine, in a new stack frame. After
-finishing the execution of the exception handler (i.e. returning from it), the processor resumes the
-execution of the suspended subroutine.
+Cortex-M异常机制工作起来像这样:
+当处理器接收到与某个异常的类型相关的信号或者事件，它挂起现在的子例程的执行(通过将状态存进调用栈中)然后在一个新的栈帧中继续执行相关的异常处理函数，另一个子例程。在异常处理函数执行完成之后(比如 从它返回)，处理器恢复被挂起的子例程的执行。
 
-The processor uses the vector table to decide what handler to execute. Each entry in the table
-contains a pointer to a handler, and each entry corresponds to a different exception type. For
-example, the second entry is the reset handler, the third entry is the NMI (Non Maskable Interrupt)
-handler, and so on.
+处理器使用向量表去确定执行哪个处理函数。表中的每一项包含一个指向一个处理函数的指针，每一项与一个不同的异常类型关联起来。比如，第二项是重置处理函数，第三项是NMI(不可屏蔽中断)处理函数，等等。
 
-As mentioned before, the processor expects the vector table to be at some specific location in memory,
-and each entry in it can potentially be used by the processor at runtime. Hence, the entries must always
-contain valid values. Furthermore, we want the `rt` crate to be flexible so the end user can customize the
-behavior of each exception handler. Finally, the vector table resides in read only memory, or rather in not
-easily modified memory, so the user has to register the handler statically, rather than at runtime.
+像之前提到的，处理器希望向量表在存储中某个特定的位置，在运行时处理器可能用到表中的每一项。因此，表中的各项必须包含有效的值。此外，我们希望`rt` crate是灵活的，因此终端用户可以定制每个异常处理函数的行为。最后，向量表要坐落在只读存储中，或者有些在不那么容易被修改的存储中，因此用户必须静态地注册处理函数，而不是在运行时。
 
 To satisfy all these constraints, we'll assign a *default* value to all the entries of the vector
 table in the `rt` crate, but make these values kind of *weak* to let the end user override them
@@ -227,8 +211,7 @@ Breakpoint 1, HardFault () at src/main.rs:18
 19      }
 ```
 
-The program now executes the user defined `HardFault` function instead of the
-`DefaultExceptionHandler` in the `rt` crate.
+程序现在执行了用户定义的`HardFault`函数而不是`rt` crate中的`DefaultExceptionHandler` 。
 
 Like our first attempt at a `main` interface, this first implementation has the problem of having no
 type safety. It's also easy to mistype the name of the exception, but that doesn't produce an error
