@@ -1,26 +1,18 @@
-# Assembly on stable
+# 稳定版中的汇编
 
-> Note: Since Rust 1.59, both *inline* assembly (`asm!`) and *free form* assembly
-> (`global_asm!`) become stable. But since it will take some time for the 
-> existing crates to catchup the change, and since it's good for us to know the
-> other ways in history we used to deal with assembly, we will keep this chapter
-> here.
+> 注意: 自Rust 1.59以来，*inline* 汇编(`asm!`)和 *free form* 汇编(`global_asm!`)
+> 变得稳定了。但是因为现存的crates需要花点时间来消化这种变化，并且了解我们在历史中曾用过的处
+> 理汇编的方法对我来说也有好处，所以我们保留了这一章。
 
-So far we have managed to boot the device and handle interrupts without a single
-line of assembly. That's quite a feat! But depending on the architecture you are
-targeting you may need some assembly to get to this point. There are also some
-operations like context switching that require assembly, etc.
+到目前位置我们已经成功地引导了设备和处理中断而没使用一行汇编。这真是一个壮举!但是取决于你的目标架构你可能需要一些汇编才能达成目的。也有一些操作像是上下文切换需要汇编，等等。
 
-The problem is that both *inline* assembly (`asm!`) and *free form* assembly
-(`global_asm!`) are unstable, and there's no estimate for when they'll be
-stabilized, so you can't use them on stable . This is not a showstopper because
-there are some workarounds which we'll document here.
+问题是 *inline* 汇编(`asm!`) 和 *free form* 汇编(`global_asm!`)是不稳定的，没法估计它们什么时候将变得稳定，所以你不能在稳定版中使用它们。这不是一个演示，因为这里记录的是一些变通的方法。
 
-To motivate this section we'll tweak the `HardFault` handler to provide
-information about the stack frame that generated the exception.
+为了激发对这章的兴趣，我们将修改下`HardFault`处理函数以提供关于产生了异常的栈帧的信息。
 
-Here's what we want to do:
+这是我们想要做的:
 
+我们将让`rt` crate
 Instead of letting the user directly put their `HardFault` handler in the vector
 table we'll make the `rt` crate put a trampoline to the user-defined `HardFault`
 handler in the vector table.
@@ -46,7 +38,7 @@ be a pointer to the registers pushed to the stack by the exception. With these
 changes the user `HardFault` handler must now have signature
 `fn(&StackedRegisters) -> !`.
 
-## `.s` files
+## `.s` 文件
 
 One approach to stable assembly is to write the assembly in an external file:
 
@@ -96,11 +88,9 @@ $ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
 {{#include ../ci/asm/app/release.objdump}}
 ```
 
-> **NOTE:** To make this disassembly smaller I commented out the initialization
-> of RAM
+> **注意:** 为了让这个反汇编更小我注释掉了RAM的初始化
 
-Now look at the vector table. The 4th entry should be the address of
-`HardFaultTrampoline` plus one.
+现在看下向量表。第四项应该是`HardFaultTrampoline`的地址加一。
 
 ``` console
 $ cargo objdump --bin app --release -- -s -j .vector_table
@@ -110,7 +100,7 @@ $ cargo objdump --bin app --release -- -s -j .vector_table
 {{#include ../ci/asm/app/release.vector_table}}
 ```
 
-## `.o` / `.a` files
+## `.o` / `.a` 文件
 
 The downside of using the `cc` crate is that it requires some assembler program
 on the build machine. For example when targeting ARM Cortex-M the `cc` crate
@@ -185,8 +175,7 @@ $ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
 {{#include ../ci/asm/app2/release.objdump}}
 ```
 
-> **NOTE**: As before I have commented out the RAM initialization to make the
-> disassembly smaller.
+> **注意**: 像之前一样我已经注释掉了RAM的初始化以让反汇编变得更小。
 
 ``` console
 $ cargo objdump --bin app --release -- -s -j .vector_table

@@ -5,10 +5,10 @@
 - [存储布局](./memory-layout.md)
 - [一个 `main` 接口](./main.md)
 - [异常处理](./exceptions.md)
-- [Assembly on stable](./asm.md)
+- [稳定版中的汇编](./asm.md)
 - [Logging with symbols](./logging.md)
 - [全局单例](./singleton.md)
 - [DMA](./dma.md)
 ---
-[A note on compiler support](./compiler-support.md)
+[与编译器支持有关的笔记](./compiler-support.md)
 [制造一个自定义目标](./custom-target.md)

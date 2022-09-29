@@ -1,25 +1,18 @@
-# A note on compiler support
+# 与编译器支持有关的笔记
 
-This book makes use of a built-in *compiler* target, the `thumbv7m-none-eabi`, for which the Rust
-team distributes a `rust-std` component, which is a pre-compiled collection of crates like [`core`]
-and [`std`].
+这本书使用了一个内置的*编译器*目标，`thumbv7m-none-eabi`，Rust团队为其分发了一个 `rust-std` 组件，`rust-std` 是跟 [`core`] 和 [`std`] 一样的预先编译好的crates的集合。
 
 [`core`]: https://doc.rust-lang.org/core/index.html
 [`std`]: https://doc.rust-lang.org/std/index.html
 
-If you want to attempt replicating the contents of this book for a different target architecture,
-you need to take into account the different levels of support that Rust provides for (compilation)
-targets.
+如果你想尝试为一个不同的目标架构复制这本书的内容，你需要考虑下Rust为(编译)目标所提供的支持在什么级别。
 
-## LLVM support
+## LLVM 支持
 
-As of Rust 1.28, the official Rust compiler, `rustc`, uses LLVM for (machine) code generation. The
-minimal level of support Rust provides for an architecture is having its LLVM backend enabled in
-`rustc`. You can see all the architectures that `rustc` supports, through LLVM, by running the
-following command:
+自Rust 1.28以来，官方的Rust编译器，`rustc`，使用LLVM生成(机器)代码。Rust对某个架构提供的最小级别的支持是在`rustc`中让它的LLVM后端可用。通过运行下面的命令，你可以看到所有的 `rustc` 通过LLVM支持的架构:
 
 ``` console
-$ # you need to have `cargo-binutils` installed to run this command
+$ # 运行这个命令，你需要安装`cargo-binutils`
 $ cargo objdump -- -version
 LLVM (http://llvm.org/):
   LLVM version 7.0.0svn
@@ -56,34 +49,23 @@ LLVM (http://llvm.org/):
     x86-64     - 64-bit X86: EM64T and AMD64
 ```
 
-If LLVM supports the architecture you are interested in, but `rustc` is built with the backend
-disabled (which is the case of AVR as of Rust 1.28), then you will need to modify the Rust source
-enabling it. The first two commits of PR [rust-lang/rust#52787] give you an idea of the required
-changes.
+如果LLVM支持了你感兴趣的架构，但是构建的`rustc`没有使能其后端(自Rust 1.28以来AVR就是这样的情况)，那么你将需要修改Rust源码以启用它。PR [rust-lang/rust#52787] 的前两个commits能让你知道需要做的改变。
 
 [rust-lang/rust#52787]: https://github.com/rust-lang/rust/pull/52787
 
-On the other hand, if LLVM doesn't support the architecture, but a fork of LLVM does, you will have
-to replace the original version of LLVM with the fork before building `rustc`. The Rust build system
-allows this and in principle it should just require changing the `llvm` submodule to point to the
-fork.
+换句话说，如果LLVM不支持这个架构，但是LLVM的一个分支支持，在编译`rustc`之前你将需要使用这个分支替代原来的LLVM 。Rust编译系统允许这么做且理论上，它应该只需要修改`llvm`的子模组让它指向那个分支就可以了。
 
-If your target architecture is only supported by some vendor provided GCC, you have the option of
-using [`mrustc`], an unofficial Rust compiler, to translate your Rust program into C code and then
-compile that using GCC.
+如果只有一些供应商提供的GCC支持你的目标架构，你可以选择使用[`mrustc`]，一个非官方的Rust编译器，去把你的Rust程序翻译成C代码然后使用GCC编译它。
 
 [`mrustc`]: https://github.com/thepowersgang/mrustc
 
-## Built-in target
+## 内置的目标
 
-A compilation target is more than just its architecture. Each target has a [specification]
-associated to it that describes, among other things, its architecture, its operating system and the
-default linker.
+一个编译目标不仅是它的架构。每个目标都有一个与它关联的[规范]，其中描述了它的架构，它的操作系统和默认的链接器。
 
-[specification]: https://github.com/rust-lang/rfcs/blob/master/text/0131-target-specification.md
+[规范]: https://github.com/rust-lang/rfcs/blob/master/text/0131-target-specification.md
 
-The Rust compiler knows about several targets. These are *built into* the compiler and can be listed
-by running the following command:
+Rust编译器知道几个目标。这些被*内置进*编译器里且可以通过下列的命令被列出来:
 
 ``` console
 $ rustc --print target-list | column
@@ -160,7 +142,7 @@ mipsel-unknown-linux-uclibc       x86_64-uwp-windows-msvc
 mipsisa32r6-unknown-linux-gnu     x86_64-wrs-vxworks
 ```
 
-You can print the specification of one of these targets using the following command:
+使用下列的命令你可以打印出某个目标的规范:
 
 ``` console
 $ rustc +nightly -Z unstable-options --print target-spec-json --target thumbv7m-none-eabi
@@ -193,20 +175,15 @@ $ rustc +nightly -Z unstable-options --print target-spec-json --target thumbv7m-
 }
 ```
 
-If none of these built-in targets seems appropriate for your target system, you'll have to create a
-custom target by writing your own target specification file in JSON format which is described in the
-[next section][custom-target].
+如果这些内置的目标都不适合你的目标系统，你将必须通过使用JSON格式编写你自己的目标规范来生成一个自制的目标，在[下个章节][custom-target]中会讲到。
 
 [custom-target]: ./custom-target.md
 
-## `rust-std` component
+## `rust-std` 组件
 
-For some of the built-in target the Rust team distributes `rust-std` components via `rustup`. This
-component is a collection of pre-compiled crates like `core` and `std`, and it's required for cross
-compilation.
+Rust团队通过`rustup`为某些内置的目标分发`rust-std`组件。这个组件是跟 [`core`] 和 [`std`] 一样的预先编译好的crates的集合，它要求交叉编译。
 
-You can find the list of targets that have a `rust-std` component available via `rustup` by running
-the following command:
+通过运行下列的命令，你可以找到具有一个`rust-std`组件的目标列表:
 
 ``` console
 $ rustup target list | column
@@ -254,9 +231,7 @@ mips64el-unknown-linux-muslabi64        x86_64-unknown-netbsd
 mipsel-unknown-linux-gnu                x86_64-unknown-redox
 ```
 
-If there's no `rust-std` component for your target, or you are using a custom target, then you'll
-have to use a nightly toolchain to build the standard library. See the next page about [building for
-custom targets][use-target-file].
+如果你的目标没有`rust-std`组件，或者你正在使用一个自制的目标，那么你必须要使用一个nightly版的工具链去构建标准库。看下一页，关于[构建自制目标][use-target-file]。
 
 [use-target-file]: ./custom-target.md#use-the-target-file
 [xargo]: https://github.com/japaric/xargo
