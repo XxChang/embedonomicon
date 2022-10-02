@@ -28,7 +28,7 @@ $ tail -n36 ../rt/src/lib.rs
 {{#include ../ci/asm/rt/asm.s:5:6}}
 ```
 
-由于
+由于ARM ABI
 Due to how the ARM ABI works this sets the Main Stack Pointer (MSP) as the first
 argument of the `HardFault` function / routine. This MSP value also happens to
 be a pointer to the registers pushed to the stack by the exception. With these
