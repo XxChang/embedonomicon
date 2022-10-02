@@ -1,4 +1,4 @@
-# Creating a custom target
+# 制造一个自定义的目标
 
 If a custom target triple is not available for your platform, you must create a custom target file
 that describes your target to rustc.
@@ -116,8 +116,9 @@ You can pretty much copy that output into your file. Start with a few modificati
 [libcalls-sync]: http://llvm.org/docs/Atomics.html#libcalls-sync
 [gcc-sync]: https://gcc.gnu.org/onlinedocs/gcc/_005f_005fsync-Builtins.html
 
-## Use the target file
+## 使用目标文件
 
+一旦你有一个目标规范文件，你可能
 Once you have a target specification file, you may refer to it by its path or by its name (i.e.
 excluding `.json`) if it is in the current directory or in `$RUST_TARGET_PATH`.
 

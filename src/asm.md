@@ -12,10 +12,7 @@
 
 这是我们想要做的:
 
-我们将让`rt` crate
-Instead of letting the user directly put their `HardFault` handler in the vector
-table we'll make the `rt` crate put a trampoline to the user-defined `HardFault`
-handler in the vector table.
+我们将让`rt` crate在向量表中放置一个跳向用户定义的`HardFault`的跳板，而不是让用户直接将它们的`HardFault`处理函数放在向量表中。
 
 ``` console
 $ tail -n36 ../rt/src/lib.rs
@@ -25,13 +22,13 @@ $ tail -n36 ../rt/src/lib.rs
 {{#include ../ci/asm/rt/src/lib.rs:61:96}}
 ```
 
-This trampoline will read the stack pointer and then call the user `HardFault`
-handler. The trampoline will have to be written in assembly:
+这个跳板将读取栈指针并调用用户的`HardFault`处理函数。这个跳板必须要用汇编来写:
 
 ``` armasm
 {{#include ../ci/asm/rt/asm.s:5:6}}
 ```
 
+由于
 Due to how the ARM ABI works this sets the Main Stack Pointer (MSP) as the first
 argument of the `HardFault` function / routine. This MSP value also happens to
 be a pointer to the registers pushed to the stack by the exception. With these
@@ -139,6 +136,7 @@ cargo:rustc-link-lib=static=asm
 cargo:rustc-link-search=native=/tmp/app/target/thumbv7m-none-eabi/debug/build/rt-6ee84e54724f2044/out
 ```
 
+我们将
 We'll do something similar to produce an archive.
 
 ``` console
@@ -154,6 +152,7 @@ $ arm-none-eabi-objdump -Cd librt.a
 {{#include ../ci/asm/rt2/librt.objdump}}
 ```
 
+接下来我们修改build script
 Next we modify the build script to bundle this archive with the `rt` rlib.
 
 ``` console

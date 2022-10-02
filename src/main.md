@@ -142,7 +142,7 @@ $ sed -n 25,46p ../rt/link.x
 
 在目前的情况下，如果你的程序在对`static`变量执行一个写入之前，读取任何 `static` 变量，那么你的程序会出现未定义的行为。让我们通过在调用`main`之前初始化所有的`static`变量来修复它。
 
-我们将需要修改下链接器脚本去进行RAM初始化:
+我们需要修改下链接器脚本去进行RAM初始化:
 
 ``` console
 $ # 只展示文件的一块
@@ -153,7 +153,7 @@ $ sed -n 25,52p ../rt/link.x
 {{#include ../ci/main/rt2/link.x:25:52}}
 ```
 
-Let's go into the details of these changes:
+让我们深入下细节:
 
 ``` text
 {{#include ../ci/main/rt2/link.x:38}}
