@@ -28,14 +28,11 @@ $ tail -n36 ../rt/src/lib.rs
 {{#include ../ci/asm/rt/asm.s:5:6}}
 ```
 
-由于ARM ABI的工作原理，它将主堆栈指针(MSP)设置为 `HardFault` 函数/例程的第一个参数。这个MSP值碰巧也是一个指针，其指向被异常推进栈中的寄存器。
-With these
-changes the user `HardFault` handler must now have signature
-`fn(&StackedRegisters) -> !`.
+由于ARM ABI的工作原理，它将主堆栈指针(MSP)设置为 `HardFault` 函数/例程的第一个参数。这个MSP值碰巧也是一个指针，其指向被异常推进栈中的寄存器。有了这些改变，用户 `HardFault` 处理函数现在必须拥有签名 `fn(&StackedRegisters) -> !` 。
 
 ## `.s` 文件
 
-One approach to stable assembly is to write the assembly in an external file:
+在一个外部文件中写汇编是一个通向稳定版的汇编的方法:
 
 ``` console
 $ cat ../rt/asm.s
@@ -45,8 +42,7 @@ $ cat ../rt/asm.s
 {{#include ../ci/asm/rt/asm.s}}
 ```
 
-And use the `cc` crate in the build script of the `rt` crate to assemble that
-file into an object file (`.o`) and then into an archive (`.a`).
+并且使用`rt` crate的build script中的`cc` crate去把那个文件汇编成一个目标文件(`.o`)，然后变成一个归档文件(`.a`)。
 
 ``` console
 $ cat ../rt/build.rs
@@ -64,7 +60,7 @@ $ tail -n2 ../rt/Cargo.toml
 {{#include ../ci/asm/rt/Cargo.toml:7:8}}
 ```
 
-And that's it!
+完成了!
 
 通过编写一个非常简单的程序我们可以确认向量表包含一个指向 `HardFaultTrampoline` 的指针。
 
@@ -96,23 +92,13 @@ $ cargo objdump --bin app --release -- -s -j .vector_table
 
 ## `.o` / `.a` 文件
 
-The downside of using the `cc` crate is that it requires some assembler program
-on the build machine. For example when targeting ARM Cortex-M the `cc` crate
-uses `arm-none-eabi-gcc` as the assembler.
+使用`cc` crate的缺点是它要求一些编译机器上的汇编器程序。比如当目标是ARM Cortex-M时，`cc` crate使用`arm-none-eabi-gcc`作为汇编器。
 
-Instead of assembling the file on the build machine we can ship a pre-assembled
-file with the `rt` crate. That way no assembler program is required on the build
-machine. However, you would still need an assembler on the machine that packages
-and publishes the crate.
+我们可以用`rt` crate来搬运一个预先汇编好的文件而不用在编译机器上汇编文件。这方法不需要在编译机器上拥有汇编器程序。然而，打包和发布crate的机器上仍然需要一个汇编器。
 
-There's not much difference between an assembly (`.s`) file and its *compiled*
-version: the object (`.o`) file. The assembler doesn't do any optimization; it
-simply chooses the right object file format for the target architecture.
+一个汇编(`.s`)文件和它的*编译*版:目标(`.o`)文件之间没有太大区别。汇编器不会做任何优化；它仅仅为目标架构选择正确的目标文件格式。
 
-Cargo provides support for bundling archives (`.a`) with crates. We can package
-object files into an archive using the `ar` command and then bundle the archive
-with the crate. In fact, this what the `cc` crate does; you can see the commands
-it invoked by searching for a file named `output` in the `target` directory.
+Cargo提供将归档文件(`.a`)和crates绑在一起的支持。使用`ar`命令我们可将目标文件打包进一个归档文件中，然后将归档文件和crate绑一起。事实上，这就是`cc` crate做的事；通过搜索一个在`target`文件夹中名为`output`的文件你可以看到`cc` crate调用的命令。
 
 ``` console
 $ grep running $(find target -name output)
@@ -178,6 +164,4 @@ $ cargo objdump --bin app --release -- -s -j .vector_table
 {{#include ../ci/asm/app2/release.vector_table}}
 ```
 
-The downside of shipping pre-assembled archives is that, in the worst case
-scenario, you'll need to ship one build artifact for each compilation target
-your library supports.
+搬运预先汇编好的归档文件的缺点是，在最糟糕的场景中，你将需要为每个你的库支持的编译目标搬运一个build artifact 。

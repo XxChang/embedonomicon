@@ -70,7 +70,7 @@ PROVIDE(PendSV = DefaultExceptionHandler);
 PROVIDE(SysTick = DefaultExceptionHandler);
 ```
 
-当检测完所有的输入对象文件而等号左侧的符号仍然没有定义的时候，`PROVIDE` 才会发挥作用。也就是用户没有为相关的异常实现处理函数。
+当检测完所有的输入目标文件而等号左侧的符号仍然没有定义的时候，`PROVIDE` 才会发挥作用。也就是用户没有为相关的异常实现处理函数。
 
 ## 测试它
 

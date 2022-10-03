@@ -1,5 +1,6 @@
 # Logging with symbols
 
+这部分将向你展示如何使用符号
 This section will show you how to utilize symbols and the ELF format to achieve
 super cheap logging.
 
@@ -319,7 +320,7 @@ $ cargo objdump --bin app -- -t | grep '\.log'
 {{#include ../ci/logging/app3/dev.objdump}}
 ```
 
-Same output as before!
+与之前一样的输出!
 
 ## Bonus: Multiple log levels
 
