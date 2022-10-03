@@ -28,10 +28,8 @@ $ tail -n36 ../rt/src/lib.rs
 {{#include ../ci/asm/rt/asm.s:5:6}}
 ```
 
-由于ARM ABI
-Due to how the ARM ABI works this sets the Main Stack Pointer (MSP) as the first
-argument of the `HardFault` function / routine. This MSP value also happens to
-be a pointer to the registers pushed to the stack by the exception. With these
+由于ARM ABI的工作原理，它将主堆栈指针(MSP)设置为 `HardFault` 函数/例程的第一个参数。这个MSP值碰巧也是一个指针，其指向被异常推进栈中的寄存器。
+With these
 changes the user `HardFault` handler must now have signature
 `fn(&StackedRegisters) -> !`.
 
@@ -68,14 +66,13 @@ $ tail -n2 ../rt/Cargo.toml
 
 And that's it!
 
-We can confirm that the vector table contains a pointer to `HardFaultTrampoline`
-by writing a very simple program.
+通过编写一个非常简单的程序我们可以确认向量表包含一个指向 `HardFaultTrampoline` 的指针。
 
 ``` rust
 {{#include ../ci/asm/app/src/main.rs}}
 ```
 
-Here's the disassembly. Look at the address of `HardFaultTrampoline`.
+这是反汇编。我们看下 `HardFaultTrampoline` 的地址。
 
 ``` console
 $ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
@@ -136,11 +133,10 @@ cargo:rustc-link-lib=static=asm
 cargo:rustc-link-search=native=/tmp/app/target/thumbv7m-none-eabi/debug/build/rt-6ee84e54724f2044/out
 ```
 
-我们将
-We'll do something similar to produce an archive.
+我们将做一些类似的事来生成一个归档文件。
 
 ``` console
-$ # most of flags `cc` uses have no effect when assembling so we drop them
+$ # `cc` 使用的大多数标志在汇编时没有影响因此我们丢弃它们
 $ arm-none-eabi-as -march=armv7-m asm.s -o asm.o
 
 $ ar crs librt.a asm.o
@@ -152,8 +148,7 @@ $ arm-none-eabi-objdump -Cd librt.a
 {{#include ../ci/asm/rt2/librt.objdump}}
 ```
 
-接下来我们修改build script
-Next we modify the build script to bundle this archive with the `rt` rlib.
+接下来我们修改build script以把这个归档文件和`rt` rlib绑一起。
 
 ``` console
 $ cat ../rt/build.rs
@@ -163,8 +158,7 @@ $ cat ../rt/build.rs
 {{#include ../ci/asm/rt2/build.rs}}
 ```
 
-Now we can test this new version against the simple program from before and
-we'll get the same output.
+现在我们可以用以前的简单程序测试这个新版本，我们将得到相同的输出
 
 ``` console
 $ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
