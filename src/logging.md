@@ -67,7 +67,7 @@ case because it's the easiest way to do I/O on QEMU.
 
 [`cortex-m-semihosting`]: https://crates.io/crates/cortex-m-semihosting
 
-Here's the code
+这里是代码
 
 ``` rust
 {{#include ../ci/logging/app/src/main.rs}}
@@ -83,14 +83,13 @@ And here's the `dependencies` section of the Cargo.toml:
 {{#include ../ci/logging/app/Cargo.toml:7:9}}
 ```
 
-Now we can build the program
+现在我们可以编译程序了
 
 ``` console
 $ cargo build
 ```
 
-To run it we'll have to add the `--semihosting-config` flag to our QEMU
-invocation:
+为了运行它我们将不得不给我们的QEMU命令添加 `--semihosting-config` 标志:
 
 ``` console
 $ qemu-system-arm \
