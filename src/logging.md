@@ -1,21 +1,14 @@
-# Logging with symbols
+# 使用符号做日志
 
-这部分将向你展示如何使用符号
-This section will show you how to utilize symbols and the ELF format to achieve
-super cheap logging.
+这部分将向你展示如何使用符号和ELF格式实现超级廉价的日志。
 
-## Arbitrary symbols
+## 任意符号
 
-Whenever we needed a stable symbol interface between crates we have mainly used
-the `no_mangle` attribute and sometimes the `export_name` attribute. The
-`export_name` attribute takes a string which becomes the name of the symbol
-whereas `#[no_mangle]` is basically sugar for `#[export_name = <item-name>]`.
+每当我们在crates之间需要一个稳定的符号接口时，我们主要使用`no_mangle`属性，有时是`export_name`属性。`export_name`属性采用一个字符串作为符号的名字，而`#[no_mangle]`本质上是`#[export_name = <item-name>]`的语法糖。
 
-Turns out we are not limited to single word names; we can use arbitrary strings,
-e.g. sentences, as the argument of the `export_name` attribute. As least when
-the output format is ELF anything that doesn't contain a null byte is fine.
+事实证明，我们并不局限于单个单词的名字；我们可以使用任意的字符串，比如 语句，作为`export_name`属性的参数。至少当输出格式是ELF时，任何不包含空字节的内容都可以。
 
-Let's check that out:
+让我们查看下:
 
 ``` console
 $ cargo new --lib foo
@@ -41,29 +34,17 @@ foo-d26a39c34b4e80ce.3lnzqy0jbpxj4pld.rcgu.o:
 0000000000000000 r こんにちは
 ```
 
-Can you see where this is going?
+你能看出这有什么用吗?
 
-## Encoding
+## 编码
 
-Here's what we'll do: we'll create one `static` variable per log message but
-instead of storing the messages *in* the variables we'll store the messages in
-the variables' *symbol names*. What we'll log then will not be the contents of
-the `static` variables but their addresses.
+下面是我们要做的：为每个日志信息我们将创造一个`static`变量，但是不是将信息存储*进*变量中，我们将把信息存储进变量的*符号名*中。然后，我们将记录的不是`static`变量的内容，而是它们的地址。
 
-As long as the `static` variables are not zero sized each one will have a
-different address. What we're doing here is effectively encoding each message
-into a unique identifier, which happens to be the variable address. Some part of
-the log system will have to decode this id back into the message.
+只要`static`变量的大小不是零，每个变量就都会有个不同的地址。这里我们要做的是将每个信息有效地编码为一个唯一的标识符，其恰好是变量的地址。日志系统必须有部分将这个id解码回日志信息。
 
-Let's write some code to illustrate the idea.
+让我们来编写一些代码解释下这个想法。
 
-In this example we'll need some way to do I/O so we'll use the
-[`cortex-m-semihosting`] crate for that. Semihosting is a technique for having a
-target device borrow the host I/O capabilities; the host here usually refers to
-the machine that's debugging the target device. In our case, QEMU supports
-semihosting out of the box so there's no need for a debugger. On a real device
-you'll have other ways to do I/O like a serial port; we use semihosting in this
-case because it's the easiest way to do I/O on QEMU.
+在这个例子里我们将需要一些方法来完成I/O操作，因此我们将使用[`cortex-m-semihosting`] crate 。Semihosting是一个技术，其用来让一个目标设备可以借用主机的I/O功能；这里，主机通常是指用来调试目标设备的机器。在我们的例子里，QEMU支持开箱即用的semihosting，因此不需要一个调试器。在一个真正的设备上你可以使用其它方法来进行I/O操作比如一个串口；在这个例子里我们使用semihosting是因为这是在QEMU上进行I/O操作最简单的方法。
 
 [`cortex-m-semihosting`]: https://crates.io/crates/cortex-m-semihosting
 
@@ -73,11 +54,9 @@ case because it's the easiest way to do I/O on QEMU.
 {{#include ../ci/logging/app/src/main.rs}}
 ```
 
-We also make use of the `debug::exit` API to have the program terminate the QEMU
-process. This is a convenience so we don't have to manually terminate the QEMU
-process.
+我们也可以使用`debug::exit` API来让程序终结QEMU进程。这很方便，因此我们不必手动终结QEMU进程。
 
-And here's the `dependencies` section of the Cargo.toml:
+这里是Cargo.toml的`dependencies`部分:
 
 ``` toml
 {{#include ../ci/logging/app/Cargo.toml:7:9}}
@@ -187,9 +166,9 @@ $ cat log.x
 We'll place the `static` variables in this new output `.log` section. This
 linker script will collect all the symbols in the `.log` sections of input
 object files and put them in an output `.log` section. We have seen this pattern
-in the [Memory layout] chapter.
+in the [存储布局] chapter.
 
-[Memory layout]: memory-layout.html
+[存储布局]: memory-layout.html
 
 The new bit here is the `(INFO)` part; this tells the linker that this section
 is a non-allocatable section. Non-allocatable sections are kept in the ELF

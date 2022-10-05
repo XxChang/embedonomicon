@@ -1,4 +1,4 @@
-# Direct Memory Access (DMA)
+# 直接存储器访问 (DMA)
 
 This section covers the core requirements for building a memory safe API around
 DMA transfers.
