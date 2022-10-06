@@ -83,16 +83,13 @@ $ qemu-system-arm \
 {{#include ../ci/logging/app/dev.out}}
 ```
 
-> **NOTE**: These addresses may not be the ones you get locally because
-> addresses of `static` variable are not guaranteed to remain the same when the
-> toolchain is changed (e.g. optimizations may have improved).
+> **注意**：这些地址可能不是你本地获得的地址因为当工具链被改变时`static`变量的地址不保障仍然是一样的(比如 优化可能会改进地址)。
 
-Now we have two addresses printed to the console.
+现在我们有两个地址被打印到控制台上了。
 
-## Decoding
+## 解码
 
-How do we convert these addresses into strings? The answer is in the symbol
-table of the ELF file.
+我们如何把这些地址转换成字符串呢?答案在ELF文件的符号表中。
 
 ``` console
 $ cargo objdump --bin app -- -t | grep '\.rodata\s*0*1\b'
@@ -100,20 +97,14 @@ $ cargo objdump --bin app -- -t | grep '\.rodata\s*0*1\b'
 
 ``` text
 {{#include ../ci/logging/app/dev.objdump}}
-$ # first column is the symbol address; last column is the symbol name
+$ # 第一列是符号地址；最后一列是符号名
 ```
 
-`objdump -t` prints the symbol table. This table contains *all* the symbols but
-we are only looking for the ones in the `.rodata` section and whose size is one
-byte (our variables have type `u8`).
+`objdump -t` 打印符号表。这个表包含*所有*的符号但是我们只查找`.rodata`中的符号，且它的大小只有一个字节(我们的变量类型是`u8`) 。
 
-It's important to note that the address of the symbols will likely change when
-optimizing the program. Let's check that.
+需要注意的是，在优化程序时，符号的地址将可能改变。让我们检查下。
 
-> **PROTIP** You can set `target.thumbv7m-none-eabi.runner` to the long QEMU
-> command from before (`qemu-system-arm -cpu (..) -kernel`) in the Cargo
-> configuration file (`.cargo/conifg`) to have `cargo run` use that *runner* to
-> execute the output binary.
+> **关键技巧** 你可以在Cargo配置文件(`.cargo/config`)中把 `target.thumbv7m-none-eabi.runner` 设置成之前(`qemu-system-arm -cpu (..)`) 的长QEMU命令以让`cargo run`使用这个*runner*执行输出的二进制项。
 
 ``` console
 $ head -n2 .cargo/config
@@ -140,20 +131,15 @@ $ cargo objdump --bin app --release -- -t | grep '\.rodata\s*0*1\b'
 {{#include ../ci/logging/app/release.objdump}}
 ```
 
-So make sure to always look for the strings in the ELF file you executed.
+因此，请确保始终在执行的ELF文件中查找字符串。
 
-Of course, the process of looking up the strings in the ELF file can be automated
-using a tool that parses the symbol table (`.symtab` section) contained in the
-ELF file. Implementing such tool is out of scope for this book and it's left as
-an exercise for the reader.
+当然，可以使用一个工具自动检查ELF文件中的字符串，该工具可以解析ELF文件包含的符号表(`.symtab`) 。实现这样的工具超出了这本书的范围，且这是留给读者一个练习。
 
-## Making it zero cost
+## 使它变成零开销
 
-Can we do better? Yes, we can!
+我们能做得更好吗?是的，我们可以！
 
-The current implementation places the `static` variables in `.rodata`, which
-means they occupy size in Flash even though we never use their contents. Using a
-little bit of linker script magic we can make them occupy *zero* space in Flash.
+现在的实现把`static`变量放在`.rodata`中，其意味着它们会占用Flash的大小即使我们从不会使用它们的内容。使用一点链接器脚本魔法我们可以让它们占用的Flash空间为*零*。
 
 ``` console
 $ cat log.x
@@ -163,37 +149,25 @@ $ cat log.x
 {{#include ../ci/logging/app2/log.x}}
 ```
 
-We'll place the `static` variables in this new output `.log` section. This
-linker script will collect all the symbols in the `.log` sections of input
-object files and put them in an output `.log` section. We have seen this pattern
-in the [存储布局] chapter.
+我们将把`static`变量放在这个新的输出`.log` section中。这个链接器脚本将把输入目标文件的`.log` section中的所有符号集中起来并把它们放进一个输出的`.log` section中。我们在[存储布局]章节中已经见过这个方法了。
 
 [存储布局]: memory-layout.html
 
-The new bit here is the `(INFO)` part; this tells the linker that this section
-is a non-allocatable section. Non-allocatable sections are kept in the ELF
-binary as metadata but they are not loaded onto the target device.
+这块`(INFO)`部分是新的；这告诉链接器这个section是一个非可分配部分。非可分配部分在ELF中作为元数据保留起来但是它们不会被加载到目标设备上。
 
-We also specified the start address of this output section: the `0` in `.log 0
-(INFO)`.
+我们也指定这个输出section的起始地址：`.log 0 (INFO)` 中的`0` 。
 
-The other improvement we can do is switch from formatted I/O (`fmt::Write`) to
-binary I/O, that is send the addresses to the host as bytes rather than as
-strings.
+我们可以做的其它改进是从格式化的I/O(`fmt::Write`)切换到二进制I/O，这是指把地址作为字节而不是字符串往主机发送。
 
-Binary serialization can be hard but we'll keep things super simple by
-serializing each address as a single byte. With this approach we don't have to
-worry about endianness or framing. The downside of this format is that a single
-byte can only represent up to 256 different addresses.
+二进制序列化可以很难但是我们将通过序列化每个地址为单个字节让事情变得很简单。有了这个办法我们不必担心大小端或者分帧。这个格式的缺点是单个字节只能表示最多256个不同的地址。
 
-Let's make those changes:
+让我们来做一下这些改变：
 
 ``` rust
 {{#include ../ci/logging/app2/src/main.rs}}
 ```
 
-Before you run this you'll have to append `-Tlog.x` to the arguments passed to
-the linker. That can be done in the Cargo configuration file.
+在你运行这个之前，你必须要在传递给链接器的参数之后添加`-Tlog.x` 。可以在Cargo的配置文件中完成它。
 
 ``` console
 $ cat .cargo/config
@@ -203,8 +177,7 @@ $ cat .cargo/config
 {{#include ../ci/logging/app2/.cargo/config}}
 ```
 
-Now you can run it! Since the output now has a binary format we'll pipe it
-through the `xxd` command to reformat it as a hexadecimal string.
+现在你可以运行它了!因为输出现在有一个二进制格式，我将通过管道将它输入`xxd`命令中重新格式化它为十六进制的字符串。
 
 ``` console
 $ cargo run | xxd -p
@@ -214,7 +187,7 @@ $ cargo run | xxd -p
 {{#include ../ci/logging/app2/dev.out}}
 ```
 
-The addresses are `0x00` and `0x01`. Let's now look at the symbol table.
+地址是`0x00`和`0x01` 。让我们现在看下符号表。
 
 ``` console
 $ cargo objdump --bin app -- -t | grep '\.log'
@@ -224,14 +197,12 @@ $ cargo objdump --bin app -- -t | grep '\.log'
 {{#include ../ci/logging/app2/dev.objdump}}
 ```
 
-There are our strings. You'll notice that their addresses now start at zero;
-this is because we set a start address for the output `.log` section.
+这是我们的字符串。我将看到它们的地址现在开始于零；这是因为我们为输出的`.log` section设置了一个起始地址。
 
-Each variable is 1 byte in size because we are using `u8` as their type. If we
-used something like `u16` then all address would be even and we would not be
-able to efficiently use all the address space (`0...255`).
+每个变量是一个字节的大小因为我们正在使用`u8`作为它们的类型。如果我们使用类似于`u16`的东西，那么所有的地址都是偶数，我们将无法有效的使用所有的地址空间(`0...255`) 。
 
-## Packaging it up
+## 打包
+
 
 You've noticed that the steps to log a string are always the same so we can
 refactor them into a macro that lives in its own crate. Also, we can make the
@@ -272,7 +243,7 @@ $ cat src/main.rs
 {{#include ../ci/logging/app3/src/main.rs}}
 ```
 
-Don't forget to update the `Cargo.toml` file to depend on the new `log` crate.
+不要忘记将`Cargo.toml`文件更新成依赖新的`log` crate 。
 
 ``` console
 $ tail -n4 Cargo.toml
@@ -370,7 +341,7 @@ $ cargo run | xxd -p
 We still get two bytes in the output but the error is given the address 0 and
 the warning is given the address 1 even though the warning was logged first.
 
-Now look at the symbol table.
+现在看一下符号表。
 
 ```  console
 $ cargo objdump --bin app -- -t | grep '\.log'
@@ -395,7 +366,6 @@ ERROR Goodbye
 
 ---
 
-If you liked this section check out the [`stlog`] logging framework which is a
-complete implementation of this idea.
+如果你喜欢这部分，看一下[`stlog`]日志框架，其是这个想法的完整实现。
 
 [`stlog`]: https://crates.io/crates/stlog
