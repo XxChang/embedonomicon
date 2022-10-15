@@ -215,9 +215,7 @@ $ cat log/src/lib.rs
 {{#include ../ci/logging/log/src/lib.rs}}
 ```
 
-
-Given that this library depends on the `.log` section it should be its
-responsibility to provide the `log.x` linker script so let's make that happen.
+因为这个库依赖`.log` section，所以它应该负责提供`log.x`链接器脚本，让我们来实现这一点。
 
 ``` console
 $ mv log.x ../log/
@@ -231,7 +229,7 @@ $ cat ../log/build.rs
 {{#include ../ci/logging/log/build.rs}}
 ```
 
-Now we can refactor our application to use the `log!` macro:
+现在我们可以重构我们的应用以使用`log!`宏:
 
 ``` console
 $ cat src/main.rs
@@ -269,26 +267,15 @@ $ cargo objdump --bin app -- -t | grep '\.log'
 
 与之前一样的输出!
 
-## Bonus: Multiple log levels
+## 额外附赠：多个日志等级
 
-Many logging frameworks provide ways to log messages at different *log levels*.
-These log levels convey the severity of the message: "this is an error", "this
-is just a warning", etc. These log levels can be used to filter out unimportant
-messages when searching for e.g. error messages.
+许多日志框架提供方法让你可以使用不同的*日志等级*去记录信息。这些日志等级表示信息的严重性：“这是一个错误”，“这只是一个警告”，等等。当搜寻，比如，错误信息时，这些日志等级可以被用来过滤掉不重要的信息。
 
-We can extend our logging library to support log levels without increasing its
-footprint. Here's how we'll do that:
+我们可以扩展我们的日志库，让它在不增加空间的情况下支持日志等级。这是我们将要做的：
 
-We have a flat address space for the messages: from `0` to `255` (inclusive). To
-keep things simple let's say we only want to differentiate between error
-messages and warning messages. We can place all the error messages at the
-beginning of the address space, and all the warning messages *after* the error
-messages. If the decoder knows the address of the first warning message then it
-can classify the messages. This idea can be extended to support more than two
-log levels.
+我们有一个与这些信息相关的平铺的地址空间：从`0`到`255`(包含255)。为了让事情简单点，我们只想区分错误信息和警告信息。我们可以把所有的错误信息放在地址空间的开始处，并将所有的警告信息放在错误信息之后。如果解码器知道第一个警告信息的地址，那么它可以分类出消息来。这个方法可以被扩展到支持两个以上的日志等级。
 
-Let's test the idea by replacing the `log` macro with two new macros: `error!`
-and `warn!`.
+让我们通过使用两个新的宏：`error!`和`warn!`替代`log`宏来测试下这个方法。
 
 ``` console
 $ cat ../log/src/lib.rs
@@ -298,11 +285,9 @@ $ cat ../log/src/lib.rs
 {{#include ../ci/logging/log2/src/lib.rs}}
 ```
 
-We distinguish errors from warnings by placing the messages in different link
-sections.
+通过将信息放在不同的link sections中，我们可以区分错误和警告。
 
-The next thing we have to do is update the linker script to place error messages
-before the warning messages.
+下一个我们必须要做的事是修改链接器脚本来将错误信息放在警告信息之前。
 
 ``` console
 $ cat ../log/log.x
@@ -312,11 +297,9 @@ $ cat ../log/log.x
 {{#include ../ci/logging/log2/log.x}}
 ```
 
-We also give a name, `__log_warning_start__`, to the boundary between the errors
-and the warnings. The address of this symbol will be the address of the first
-warning message.
+我们也将错误和警告之间的边界命名为`__log_warning_start__`。这个符号的地址将是第一个警告信息的地址。
 
-We can now update the application to make use of these new macros.
+我们现在可以更新应用以使用这些新的宏。
 
 ``` console
 $ cat src/main.rs
@@ -326,7 +309,7 @@ $ cat src/main.rs
 {{#include ../ci/logging/app4/src/main.rs}}
 ```
 
-The output won't change much:
+输出将不会改变太多：
 
 ``` console
 $ cargo run | xxd -p
@@ -336,8 +319,7 @@ $ cargo run | xxd -p
 {{#include ../ci/logging/app4/dev.out}}
 ```
 
-We still get two bytes in the output but the error is given the address 0 and
-the warning is given the address 1 even though the warning was logged first.
+我们仍然在输出中获得了两个字节，但是错误被赋予了地址0，警告被赋予了地址1，即使警告被先记录。
 
 现在看一下符号表。
 
