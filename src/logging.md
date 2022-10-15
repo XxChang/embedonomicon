@@ -203,10 +203,7 @@ $ cargo objdump --bin app -- -t | grep '\.log'
 
 ## 打包
 
-
-You've noticed that the steps to log a string are always the same so we can
-refactor them into a macro that lives in its own crate. Also, we can make the
-logging library more reusable by abstracting the I/O part behind a trait.
+你已经注意到，记录一个字符串的步骤总是一样的，因此我们可以把它们重构为一个位于自己的crate中的宏。此外，通过将I/O部分抽象成一个trait，我们还可以提高日志库的可重用部分。
 
 ``` console
 $ cargo new --lib log
@@ -217,6 +214,7 @@ $ cat log/src/lib.rs
 ``` rust
 {{#include ../ci/logging/log/src/lib.rs}}
 ```
+
 
 Given that this library depends on the `.log` section it should be its
 responsibility to provide the `log.x` linker script so let's make that happen.
@@ -351,13 +349,9 @@ $ cargo objdump --bin app -- -t | grep '\.log'
 {{#include ../ci/logging/app4/dev.objdump}}
 ```
 
-There's now an extra symbol, `__log_warning_start__`, in the `.log` section.
-The address of this symbol is the address of the first warning message.
-Symbols with addresses lower than this value are errors, and the rest of symbols
-are warnings.
+现在在`.log` section中，有了一个额外符号，`__log_warning_start__` 。这个符号的地址是第一个警告信息的地址。地址低于这个值的符号是错误，剩余的符号是警告。
 
-With an appropriate decoder you could get the following human readable output
-from all this information:
+使用一个合适的解码器你可以从所有这些信息获得以下人类可读的输出：
 
 ``` text
 WARNING Hello, world!
@@ -366,6 +360,6 @@ ERROR Goodbye
 
 ---
 
-如果你喜欢这部分，看一下[`stlog`]日志框架，其是这个想法的完整实现。
+如果你喜欢这部分，看一下[`stlog`]日志框架，它是这个想法的完整实现。
 
 [`stlog`]: https://crates.io/crates/stlog
