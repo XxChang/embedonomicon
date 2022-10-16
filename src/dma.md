@@ -163,23 +163,7 @@ Likewise, we use `Ordering::Acquire` in `Transfer.wait` to prevent all
 subsequent memory operations from being moved *before* `self.is_done()`, which
 performs a volatile read.
 
-To better visualize the effect of the fences here's a sligh
-static B: u8 = 0;
-$ ( cd foo && cargo nm --lib )
-foo-d26a39c34b4e80ce.3lnzqy0jbpxj4pld.rcgu.o:
-0000000000000000 r Hello, world!
-0000000000000000 V __rustc_debug_gdb_scripts_section__
-0000000000000000 r こんにちは
-你能看出这有什么用吗?
-
-编码
-下面是我们要做的：为每个日志信息我们将创造一个static变量，但是不是将信息存储进变量中，我们将把信息存储进变量的符号名中。然后，我们将记录的不是static变量的内容，而是它们的地址。
-
-只要static变量的大小不是零，每个变量就都会有个不同的地址。这里我们要做的是将每个信息有效地编码为一个唯一的标识符，其恰好是变量的地址。日志系统必须有部分将这个id解码回日志信息。
-
-让我们来编写一些代码解释下这个想法。
-
-在这个例子里我们将需要一些方法来完成I/O操作，因此我们将使用cortex-m-semihosting crate 。tly tweaked version
+To better visualize the effect of the fences here's a slightly tweaked version
 of the example from the previous section. We have added the fences and their
 orderings in the comments.
 
