@@ -77,15 +77,9 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 然后被`bar`重新用来分配像是`x`和`y`这样的变量。在运行时，这可能会导致变量`x`和`y`随机更改其值。DMA传输
 也会覆盖掉被函数`bar`的序言推入栈中的状态(比如link寄存器)。
 
-注意如果我们不用`mem::forget`，而是`mem::drop`，
-Note that if we had not use `mem::forget`, but `mem::drop`, it would have been
-possible to make `Transfer`'s destructor stop the DMA transfer and then the
-program would have been safe. But one can *not* rely on destructors running to
-enforce memory safety because `mem::forget` and memory leaks (see RC cycles) are
-safe in Rust.
+注意如果我们不用`mem::forget`，而是`mem::drop`，可以让`Transfer`的析构函数停止DMA的传输，这样程序就变成了安全的了。但是*不*能依赖于运行析构函数来加强存储安全性因为`mem::forget`和内存泄露(看下RC cycles)在Rust中是安全的。
 
-We can fix this particular problem by changing the lifetime of the buffer from
-`'a` to `'static` in both APIs.
+通过在APIs中把缓存的生命周期从`'a`变成`'static`来修复这个问题。
 
 ``` rust
 {{#include ../ci/dma/examples/two.rs:7:12}}
@@ -93,44 +87,35 @@ We can fix this particular problem by changing the lifetime of the buffer from
 {{#include ../ci/dma/examples/two.rs:35:36}}
 ```
 
-If we try to replicate the previous problem we note that `mem::forget` no longer
-causes problems.
+如果我们尝试复现先前的问题，我们注意到`mem::forget`不再引起问题了。
 
 ``` rust
 {{#include ../ci/dma/examples/two.rs:40:52}}
 {{#include ../ci/dma/examples/two.rs:54:61}}
 ```
 
-As before, the DMA transfer continues after `mem::forget`-ing the `Transfer`
-value. This time that's not an issue because `buf` is statically allocated
-(e.g. `static mut` variable) and not on the stack.
+像之前一样，在`mem::forget` `Transfer`的值之后，DMA传输继续运行着。这次没有问题了，因为`buf`是静态分配的(比如`static mut`变量)，不是在栈上。
 
-## Overlapping use
+## 重叠使用(Overlapping use)
 
-Our API doesn't prevent the user from using the `Serial` interface while the DMA
-transfer is in progress. This could lead the transfer to fail or data to be
-lost.
+我们的API不会阻止用户在DMA传输过程中使用`Serial`接口。这可能导致传输失败或者数据丢失。
 
-There are several ways to prevent overlapping use. One way is to have `Transfer`
-take ownership of `Serial1` and return it back when `wait` is called.
+有许多方法可以禁止重叠使用。一个方法是让`Transfer`获取`Serial1`的所有权，然后当`wait`被调用时将它返回。
 
 ``` rust
 {{#include ../ci/dma/examples/three.rs:7:32}}
 {{#include ../ci/dma/examples/three.rs:40:53}}
 {{#include ../ci/dma/examples/three.rs:60:68}}
 ```
-The move semantics statically prevent access to `Serial1` while the transfer is
-in progress.
+移动语义静态地阻止了当传输在进行时对`Serial1`的访问。
 
 ``` rust
 {{#include ../ci/dma/examples/three.rs:71:81}}
 ```
 
-There are other ways to prevent overlapping use. For example, a (`Cell`) flag
-that indicates whether a DMA transfer is in progress could be added to
-`Serial1`. When the flag is set `read`, `write`, `read_exact` and `write_all`
-would all return an error (e.g. `Error::InUse`) at runtime. The flag would be
-set when `write_all` / `read_exact` is used and cleared in `Transfer.wait`.
+还有其它方法可以放置重叠使用。比如，可以往`Serial1`添加一个(`Cell`)标志，其指出是否一个DMA传输正在进行中。
+当标志被设置了，`read`，`write`，`read_exact`和`write_all`全都会在运行时返回一个错误(比如`Error::InUse`)。
+当使用`write_all` / `read_exact`时，会设置标志，在`Transfer.wait`中，标志会被清除。
 
 ## Compiler (mis)optimizations
 
@@ -271,7 +256,7 @@ first.
 
 [`Pin`]: https://doc.rust-lang.org/nightly/std/pin/index.html
 
-> **NOTE:** To compile all the programs below this point you'll need Rust
+> **注意：** To compile all the programs below this point you'll need Rust
 > `>=1.33.0`. As of time of writing (2019-01-04) that means using the nightly
 > channel.
 
@@ -281,7 +266,7 @@ first.
 {{#include ../ci/dma/examples/six.rs:74:75}}
 ```
 
-> **NOTE:** We could have used the [`StableDeref`] trait instead of the `Pin`
+> **注意：** We could have used the [`StableDeref`] trait instead of the `Pin`
 > newtype but opted for `Pin` since it's provided in the standard library.
 
 [`StableDeref`]: https://crates.io/crates/stable_deref_trait
@@ -369,3 +354,4 @@ DMA abstraction, like configuring the DMA channels (e.g. streams, circular vs
 one-shot mode, etc.), alignment of buffers, error handling, how to make the
 abstraction device-agnostic, etc. All those aspects are left as an exercise for
 the reader / community (`:P`).
+Overlapping use
