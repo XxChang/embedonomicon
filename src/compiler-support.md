@@ -231,7 +231,7 @@ mips64el-unknown-linux-muslabi64        x86_64-unknown-netbsd
 mipsel-unknown-linux-gnu                x86_64-unknown-redox
 ```
 
-如果你的目标没有`rust-std`组件，或者你正在使用一个自制的目标，那么你必须要使用一个nightly版的工具链去构建标准库。看下一页，关于[构建自制目标][use-target-file]。
+如果你的目标没有`rust-std`组件，或者你正在使用一个自制的目标，那么你必须要使用一个开发版的工具链去构建标准库。看下一页，关于[构建自制目标][use-target-file]。
 
 [use-target-file]: ./custom-target.md#use-the-target-file
 [xargo]: https://github.com/japaric/xargo

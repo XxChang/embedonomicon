@@ -139,25 +139,17 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 
 同样地，我们在`Transfer.wait`中使用`Ordering::Acquire`以避免所有的后续的存储操作被移到`self.is_done()`*之前*，其执行了一个volatile读入。
 
-为了更好地可视化
-To better visualize the effect of the fences here's a slightly tweaked version
-of the example from the previous section. We have added the fences and their
-orderings in the comments.
+为了更好地展示fences的影响，稍微修改下上个部分中的例子。我们将fences和它们的orderings添加到注释中。
 
 ``` rust
 {{#include ../ci/dma/examples/four.rs:68:87}}
 ```
 
-The zeroing operation can *not* be moved *after* `read_exact` due to the
-`Release` fence. Similarly, the `reverse` operation can *not* be moved *before*
-`wait` due to the `Acquire` fence. The memory operations *between* both fences
-*can* be freely reordered across the fences but none of those operations
-involves `buf` so such reorderings do *not* result in undefined behavior.
+由于`Release` fence，赋零操作*不*能被移到`read_exact`*之后*。同样地，由于`Acquire` fence，`reverse`操作*不*能被移动`wait`之前。
+在两个fences*之间*的存储操作*可以*在fences间自由地重新排序，但是这些操作都不会涉及到`buf`，所以这种重新排序*不*会导致未定义的行为。
 
-Note that `compiler_fence` is a bit stronger than what's required. For example,
-the fences will prevent the operations on `x` from being merged even though we
-know that `buf` doesn't overlap with `x` (due to Rust aliasing rules). However,
-there exist no intrinsic that's more fine grained than `compiler_fence`.
+请注意`compiler_fence`比要求的强一些。比如，fences将防止在`x`上的操作被合并即使我们知道`buf`不会与`x`重叠(由于Rust的别名规则)。
+然而，没有比`compiler_fence`更精细的内部函数了。
 
 ### 我们不需要内存屏障吗？
 
