@@ -117,22 +117,17 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 当标志被设置了，`read`，`write`，`read_exact`和`write_all`全都会在运行时返回一个错误(比如`Error::InUse`)。
 当使用`write_all` / `read_exact`时，会设置标志，在`Transfer.wait`中，标志会被清除。
 
-## Compiler (mis)optimizations
+## 编译器(误)优化
 
-The compiler is free to re-order and merge non-volatile memory operations to
-better optimize a program. With our current API, this freedom can lead to
-undefined behavior. Consider the following example:
+编译器可以自由地重新排序和合并不是volatile的存储操作以更好地优化一个程序。使用我们现在的API，这个自由度会导致未定义的行为。想一下下面的例子：
 
 ``` rust
 {{#include ../ci/dma/examples/three.rs:84:97}}
 ```
 
-Here the compiler is free to move `buf.reverse()` before `t.wait()`, which would
-result in a data race: both the processor and the DMA would end up modifying
-`buf` at the same time. Similarly the compiler can move the zeroing operation to
-after `read_exact`, which would also result in a data race.
+这里编译器可以将`buf.reverse()`移到`t.wait()`之前，其将导致一个数据竞争问题：处理器和DMA最终都会同时修改`buf` 。同样地编译器可以将赋零操作放到`read_exact`之后，它也会导致一个数据竞争问题。
 
-To prevent these problematic reorderings we can use a [`compiler_fence`]
+为了避免这些存在问题的重排序，我们可以使用一个 [`compiler_fence`]
 
 [`compiler_fence`]: https://doc.rust-lang.org/core/sync/atomic/fn.compiler_fence.html
 
