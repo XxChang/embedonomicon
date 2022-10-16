@@ -1,31 +1,26 @@
-# Global singletons
+# 全局单例
 
-In this section we'll cover how to implement a global, shared singleton. The
-embedded Rust book covered local, owned singletons which are pretty much unique
-to Rust. Global singletons are essentially the singleton pattern you see in C
-and C++; they are not specific to embedded development but since they involve
-symbols they seemed a good fit for the embedonomicon.
+在这部分我们将说到如何实现一个全局的，共享单例。 The embedded Rust book 提到了局部的，拥有所有权的单例，
+这对Rust来说几乎是独一无二的。全局单例本质上是你在C和C++中见到的单例模式；它们并不止出现在嵌入式开发中，但
+是因为它们涉及到符号，所以似乎很适合嵌入式宝典。
 
 > **TODO**(resources team) link "the embedded Rust book" to the singletons
 > section when it's up
 
-To illustrate this section we'll extend the logger we developed in the last
-section to support global logging. The result will be very similar to the
-`#[global_allocator]` feature covered in the embedded Rust book.
+为了解释这部分，我们将扩展我们在上部分开发的日志以支持全局日志记录。结果与在the embedded Rust book提到
+的`#[global_allocator]`功能非常相似。
 
 > **TODO**(resources team) link `#[global_allocator]` to the collections chapter
 > of the book when it's in a more stable location.
 
-Here's the summary of what we want to:
+总结下我们需要的东西：
 
-In the last section we created a `log!` macro to log messages through a specific
-logger, a value that implements the `Log` trait. The syntax of the `log!` macro
-is `log!(logger, "String")`. We want to extend the macro such that
-`log!("String")` also works. Using the `logger`-less version should log the
-message through a global logger; this is how `std::println!` works. We'll also
-need a mechanism to declare what the global logger is; this is the part that's
-similar to `#[global_allocator]`.
+在上一部分我们创造了一个`log!`宏以通过一个特定的logger去记录信息，logger是一个实现了`Log` trait的值。
+`log!`宏的语法是`log!(logger, "String")`。我们想要扩展下宏，让`log!("String")`也可以工作。
+Using the `logger`-less version should log the
+message through a global logger; 这是`std::println!`的工作方式。我们也需要一个机制去声明全局logger是什么；这是与`#[global_allocator]`相似的部分。
 
+它可以是在顶层crate中声明的全局logger，它也可以是在顶层crate中定义的全局logger的数据类型
 It could be that the global logger is declared in the top crate and it could
 also be that the type of the global logger is defined in the top crate. In this
 scenario the dependencies can *not* know the exact type of the global logger. To
@@ -52,12 +47,10 @@ Let's start with the trait.
 {{#include ../ci/singleton/log/src/lib.rs:4:6}}
 ```
 
-Both `GlobalLog` and `Log` have a `log` method. The difference is that
-`GlobalLog.log` takes a shared reference to the receiver (`&self`). This is
-necessary because the global logger will be a `static` variable. More on that
-later.
+`GlobalLog`和`Log`都有一个`log`方法。不同的是，`GlobalLog`将一个共享的引用拿给接收者(`&self`)。
+因为全局logger将是一个`static`变量所以这是必须的。之后会提到更多。
 
-The other difference is that `GlobalLog.log` doesn't return a `Result`. This
+另一个不同是，`GlobalLog.log`不返回一个`Result`。 This
 means that it can *not* report errors to the caller. This is not a strict
 requirement for traits used to implement global singletons. Error handling in
 global singletons is fine but then all users of the global version of the `log!`

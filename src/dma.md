@@ -1,26 +1,20 @@
 # 直接存储器访问 (DMA)
 
-This section covers the core requirements for building a memory safe API around
-DMA transfers.
+本节涉及到围绕DMA传输搭建一个存储安全的API的核心需求。
 
-The DMA peripheral is used to perform memory transfers in parallel to the work
-of the processor (the execution of the main program). A DMA transfer is more or
-less equivalent to spawning a thread (see [`thread::spawn`]) to do a `memcpy`.
-We'll use the fork-join model to illustrate the requirements of a memory safe
-API.
+DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来执行存储传输。一个DMA传输或多或少等于启动一个进程(看[`thread::spawn`])去执行一个`memcpy` 。我们将用fork-join模型去解释一个存储安全的API的要求。
 
 [`thread::spawn`]: https://doc.rust-lang.org/std/thread/fn.spawn.html
 
-Consider the following DMA primitives:
+考虑下面的DMA数据类型：
 
 ``` rust
 {{#include ../ci/dma/src/lib.rs:6:57}}
 {{#include ../ci/dma/src/lib.rs:59:60}}
 ```
 
-Assume that the `Dma1Channel1` is statically configured to work with serial port
-(AKA UART or USART) #1, `Serial1`, in one-shot mode (i.e. not circular mode).
-`Serial1` provides the following *blocking* API:
+假设`Dma1Channel1`被静态地配置成按one-shot的模式(也即不是circular模式)使用串口(又称作UART或者USART) #1，`Serial1`。
+`Serial1`提供下面的*阻塞*版的API：
 
 ``` rust
 {{#include ../ci/dma/src/lib.rs:62:72}}
@@ -28,18 +22,14 @@ Assume that the `Dma1Channel1` is statically configured to work with serial port
 {{#include ../ci/dma/src/lib.rs:82:83}}
 ```
 
-Let's say we want to extend `Serial1` API to (a) asynchronously send out a
-buffer and (b) asynchronously fill a buffer.
+假设我们想要将`Serial1` API扩展成可以(a)异步地发送一个缓存区和(b)异步地填充一个缓存区。
 
-We'll start with a memory unsafe API and we'll iterate on it until it's
-completely memory safe. On each step we'll show you how the API can be broken to
-make you aware of the issues that need to be addressed when dealing with
-asynchronous memory operations.
+一开始我们将使用一个存储不安全的API，然后我们将迭代它直到它完全变成存储安全的API。在每一步，我们都将向你展示如何打破API，
+让你意识到当使用异步的存储操作时，有哪些问题需要被解决。
 
-## A first stab
+## 开场
 
-For starters, let's try to use the [`Write::write_all`] API as a reference. To
-keep things simple let's ignore all error handling.
+作为开端，让我们尝试使用[`Write::write_all`] API作为参考。为了简便，让我们忽略所有的错误处理。
 
 [`Write::write_all`]: https://doc.rust-lang.org/std/io/trait.Write.html#method.write_all
 
@@ -47,11 +37,10 @@ keep things simple let's ignore all error handling.
 {{#include ../ci/dma/examples/one.rs:7:47}}
 ```
 
-> **NOTE:** `Transfer` could expose a futures or generator based API instead of
-> the API shown above. That's an API design question that has little bearing on
-> the memory safety of the overall API so we won't delve into it in this text.
+> **注意：** 不用像上面的API一样，`Transfer`的API也可以暴露一个futures或者generator。
+> 这是一个API设计问题，与整个API的内存安全性关系不大，因此我们在本文中不会深入讨论。
 
-We can also implement an asynchronous version of [`Read::read_exact`].
+我们也可以实现一个异步版本的[`Read::read_exact`] 。
 
 [`Read::read_exact`]: https://doc.rust-lang.org/std/io/trait.Read.html#method.read_exact
 
@@ -59,13 +48,13 @@ We can also implement an asynchronous version of [`Read::read_exact`].
 {{#include ../ci/dma/examples/one.rs:49:63}}
 ```
 
-Here's how to use the `write_all` API:
+这里是`write_all` API的用法：
 
 ``` rust
 {{#include ../ci/dma/examples/one.rs:66:71}}
 ```
 
-And here's an example of using the `read_exact` API:
+这是使用`read_exact` API的一个例子：
 
 ``` rust
 {{#include ../ci/dma/examples/one.rs:74:86}}
@@ -73,9 +62,7 @@ And here's an example of using the `read_exact` API:
 
 ## `mem::forget`
 
-[`mem::forget`] is a safe API. If our API is truly safe then we should be able
-to use both together without running into undefined behavior. However, that's
-not the case; consider the following example:
+[`mem::forget`]是一个安全的API。如果我们的API真的是安全的，那么我们应该能够将两者结合使用而不会出现未定义的行为。然而，情况并非如此；考虑下下面的例子：
 
 [`mem::forget`]: https://doc.rust-lang.org/std/mem/fn.forget.html
 
@@ -84,17 +71,13 @@ not the case; consider the following example:
 {{#include ../ci/dma/examples/one.rs:105:112}}
 ```
 
-Here we start a DMA transfer, in `start`, to fill an array allocated on the
-stack and then `mem::forget` the returned `Transfer` value. Then we proceed to
-return from `start` and execute the function `bar`.
+在`start`中我们启动了一个DMA传输以填充一个在堆上分配的数组，然后`mem::forget`被返回的`Transfer`值。然后我们继续从`start`返回并执行函数`bar` 。
 
-This series of operations results in undefined behavior. The DMA transfer writes
-to stack memory but that memory is released when `start` returns and then reused
-by `bar` to allocate variables like `x` and `y`. At runtime this could result in
-variables `x` and `y` changing their value at random times. The DMA transfer
-could also overwrite the state (e.g. link register) pushed onto the stack by the
-prologue of function `bar`.
+这一系列操作导致了未定义的行为。DMA传输向栈的存储区写入，但是当`start`返回时，那块存储区域会被释放，
+然后被`bar`重新用来分配像是`x`和`y`这样的变量。在运行时，这可能会导致变量`x`和`y`随机更改其值。DMA传输
+也会覆盖掉被函数`bar`的序言推入栈中的状态(比如link寄存器)。
 
+注意如果我们不用`mem::forget`，而是`mem::drop`，
 Note that if we had not use `mem::forget`, but `mem::drop`, it would have been
 possible to make `Transfer`'s destructor stop the DMA transfer and then the
 program would have been safe. But one can *not* rely on destructors running to
@@ -180,7 +163,23 @@ Likewise, we use `Ordering::Acquire` in `Transfer.wait` to prevent all
 subsequent memory operations from being moved *before* `self.is_done()`, which
 performs a volatile read.
 
-To better visualize the effect of the fences here's a slightly tweaked version
+To better visualize the effect of the fences here's a sligh
+static B: u8 = 0;
+$ ( cd foo && cargo nm --lib )
+foo-d26a39c34b4e80ce.3lnzqy0jbpxj4pld.rcgu.o:
+0000000000000000 r Hello, world!
+0000000000000000 V __rustc_debug_gdb_scripts_section__
+0000000000000000 r こんにちは
+你能看出这有什么用吗?
+
+编码
+下面是我们要做的：为每个日志信息我们将创造一个static变量，但是不是将信息存储进变量中，我们将把信息存储进变量的符号名中。然后，我们将记录的不是static变量的内容，而是它们的地址。
+
+只要static变量的大小不是零，每个变量就都会有个不同的地址。这里我们要做的是将每个信息有效地编码为一个唯一的标识符，其恰好是变量的地址。日志系统必须有部分将这个id解码回日志信息。
+
+让我们来编写一些代码解释下这个想法。
+
+在这个例子里我们将需要一些方法来完成I/O操作，因此我们将使用cortex-m-semihosting crate 。tly tweaked version
 of the example from the previous section. We have added the fences and their
 orderings in the comments.
 
@@ -199,7 +198,7 @@ the fences will prevent the operations on `x` from being merged even though we
 know that `buf` doesn't overlap with `x` (due to Rust aliasing rules). However,
 there exist no intrinsic that's more fine grained than `compiler_fence`.
 
-### Don't we need a memory barrier?
+### 我们不需要内存屏障吗？
 
 That depends on the target architecture. In the case of Cortex M0 to M4F cores,
 [AN321] says:
@@ -363,7 +362,7 @@ Now the DMA transfer will be stopped before the buffer is deallocated.
 {{#include ../ci/dma/examples/eight.rs:120:134}}
 ```
 
-## Summary
+## 总结
 
 To sum it up, we need to consider all the following points to achieve  memory
 safe DMA transfers:
