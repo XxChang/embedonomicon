@@ -135,14 +135,11 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 {{#include ../ci/dma/examples/four.rs:9:65}}
 ```
 
-We use `Ordering::Release` in `read_exact` and `write_all` to prevent all
-preceding memory operations from being moved *after* `self.dma.start()`, which
-performs a volatile write.
+我们在`read_exact`和`write_all`中使用`Ordering::Release`以避免所有的正在进行中的存储操作被移动到`self.dma.start()`后面去，其执行了一个volatile写入。
 
-Likewise, we use `Ordering::Acquire` in `Transfer.wait` to prevent all
-subsequent memory operations from being moved *before* `self.is_done()`, which
-performs a volatile read.
+同样地，我们在`Transfer.wait`中使用`Ordering::Acquire`以避免所有的后续的存储操作被移到`self.is_done()`*之前*，其执行了一个volatile读入。
 
+为了更好地可视化
 To better visualize the effect of the fences here's a slightly tweaked version
 of the example from the previous section. We have added the fences and their
 orderings in the comments.
@@ -297,9 +294,9 @@ places.
 {{#include ../ci/dma/examples/seven.rs:66:67}}
 ```
 
-Now the problematic program will be rejected.
+现在有问题的程序将被拒绝。
 
-## Destructors
+## 析构函数
 
 Now that the API accepts `Box`-es and other types that have destructors we need
 to decide what to do when `Transfer` is early-dropped.
