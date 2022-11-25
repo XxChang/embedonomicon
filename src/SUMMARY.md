@@ -5,7 +5,7 @@
 - [存储布局](./memory-layout.md)
 - [一个 `main` 接口](./main.md)
 - [异常处理](./exceptions.md)
-- [稳定版中的汇编](./asm.md)
+- [稳定版的汇编](./asm.md)
 - [使用符号做日志](./logging.md)
 - [全局单例](./singleton.md)
 - [DMA](./dma.md)
