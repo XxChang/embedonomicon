@@ -1,6 +1,6 @@
 # 全局单例
 
-在这部分会说到如何实现一个全局的，共享单例。 The embedded Rust book 中提到了局部的，拥有所有权的单例，
+在这部分会说到如何实现一个全局的，可共享的单例。 The embedded Rust book 中提到了局部的，拥有所有权的单例，
 这对Rust来说几乎是独一无二的。全局单例本质上就是在C和C++中见到的那些单例模式；它们不止出现在嵌入式开发中，但是因为它们涉及到符号，所以似乎很适合这本书的内容。
 
 > **TODO**(resources team) link "the embedded Rust book" to the singletons
@@ -39,7 +39,7 @@ $ cat ../log/src/lib.rs
 `GlobalLog`和`Log`都有一个`log`方法。不同的是，`GlobalLog`需要获取一个对接收者的共享的引用(`&self`)。
 因为全局logger是一个`static`变量所以这是必须的。之后会提到更多。
 
-另一个不同是，`GlobalLog.log`不返回一个`Result`。 这意味着它*不*会向调用者报告错误。这对用来实现全局单例的traits来说不是一个严格的要求。全局单例中的错误处理很好，但是另一方面全局版本的`log!`宏的的所有用户必须就错误类型达成一致。这里通过让`GlobalLog`的实现者来处理错误可以简化这个接口。
+另一个不同是，`GlobalLog.log`不返回一个`Result`。 这意味着它*不*会向调用者报告错误。这对用来实现全局单例的traits来说不是一个严格的要求。全局单例中有错误处理很好，但是另一方面全局版本的`log!`宏的的所有用户必须就错误类型达成一致。这里通过让`GlobalLog`的实现者来处理错误可以简化这个接口。
 
 还有另一个不同，`GlobalLog`要求实现者是`Sync`的，它可以在线程间被共享。对于放置在`static`变量中的值来说这是一个要求；它们的类型必须实现`Sync` trait 。
 
@@ -96,9 +96,7 @@ $ tail -n5 Cargo.toml
 {{#include ../ci/singleton/app/Cargo.toml:11:15}}
 ```
 
-这是在上个章节中所写的某个例子的移植。这里的输出和之前的是一样的。
-This is a port of one of the examples written in the [previous] section. The
-output is the same as what we got back there.
+这是在[先前]章节中所写的某个例子的移植。这里的输出和之前的是一样的。
 
 ``` console
 $ cargo run | xxd -p
