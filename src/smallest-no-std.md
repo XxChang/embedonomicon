@@ -88,8 +88,8 @@ $ cat .cargo/config
 
 ## eh_personality
 
-如果你配置的不是在恐慌时无条件终止，大多数与完整的操作系统有关的目标都不是(或者如果你的 [自制目标平台][custom-target] 不包含
-`"panic-strategy": "abort"`)，那么你必须告诉Cargo这么做或者添加一个 `eh_personality` 函数，其需要一个nightly版的编译器。[这里是关于它的Rust文档][more-about-lang-items]，
+如果你配置的不是在恐慌时无条件终止(译者注：`panic = "abort"`)，大多数与完整的操作系统有关的目标都不是(或者如果你的 [自制目标平台][custom-target] 不包含
+`"panic-strategy": "abort"`)，那么你必须告诉Cargo这么做或者添加一个 `eh_personality` 函数，后者需要nightly版的编译器。[这里是关于它的Rust文档][more-about-lang-items]，
 [这里是一些关于它的讨论][til-why-eh-personality].
 
 在 Cargo.toml 中， 添加:
