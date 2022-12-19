@@ -1,12 +1,12 @@
 # 存储布局
 
-下一步是确保程序有正确的存储布局，目标平台才可以执行它。在我们的例子里，我将使用一个虚拟的Cortex-M3微控制器: [LM3S6965] 。我们的程序是运行在设备上的唯一一个进程，因此它必须要负责初始化设备。
+下一步是确保程序有正确的存储布局，目标平台才可以执行它。在我们的例子里，将使用一个虚拟的Cortex-M3微控制器：[LM3S6965] 。我们的程序是运行在设备上的唯一一个进程，因此它必须要负责初始化设备。
 
 ## 背景信息
 
 [LM3S6965]: http://www.ti.com/product/LM3S6965
 
-Cortex-M 设备需要把[向量表]放在它们[代码区]的开始处。
+Cortex-M 设备需要把[向量表]放在[代码区]的开始处。
 向量表是一组指针；启动设备需要前两个指针，剩下来的指针都与异常有关。我们现在忽略它们。
 
 [代码区]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/memory-model
@@ -17,7 +17,7 @@ Cortex-M 设备需要把[向量表]放在它们[代码区]的开始处。
 [链接器脚本]: https://sourceware.org/binutils/docs/ld/Scripts.html
 
 每一个符号有一个由编译器分配的名字。自Rust 1.28以来，Rust编译器分配给符号的名字都是这样的格式:
-`_ZN5krate6module8function17he1dfc17c86fe16daE`，其展开是 `krate::module::function::he1dfc17c86fe16da` 其中 `krate::module::function` 是函数或者变量的路径，`he1dfc17c86fe16da` 某个哈希值。Rust编译器将把每个符号放进它自己的独有的section中；比如之前提到的符号将被放进一个名为 `.text._ZN5krate6module8function17he1dfc17c86fe16daE` 的section中。
+`_ZN5krate6module8function17he1dfc17c86fe16daE`，其展开是 `krate::module::function::he1dfc17c86fe16da` 其中 `krate::module::function` 是函数或者变量的路径，`he1dfc17c86fe16da` 是某个哈希值。Rust编译器将把每个符号放进它自己的独有的section中；比如之前提到的符号将被放进一个名为 `.text._ZN5krate6module8function17he1dfc17c86fe16daE` 的section中。
 
 这些编译器产生的符号和section名在不同的Rust编译器发布版中不保证是不变的。然而，语言让我们可以使用这些attributes控制符号名和放置的section:
 
@@ -42,7 +42,7 @@ Cortex-M 设备需要把[向量表]放在它们[代码区]的开始处。
 
 为了从链接器脚本中指出重置处理函数和重置向量，我们需要它们有一个稳定的符号名因此我们使用 `#[no_mangle]` 。我们需要稍微控制下 `RESET_VECTOR` 的位置，因此我们将它放进一个已知的section中，`.vector_table.reset_vector` 。重置处理函数，`Reset` ，的确切位置不重要。我们只使用编译器默认生成的section 。
 
-这个链接器将忽略有内部链接的符号(也叫内部符号)，遍历输入目标文件的列表，因此我们需要让我们的符号具有外部链接。在Rust中让一个符号变成外部的方法，只有使它的相关项变成公共的(`pub`)和*可到达的*(在项和crate的根路径间没有私有模块)。
+当遍历输入目标文件的列表时，这个链接器将忽略是内部链接的符号(也叫内部符号)，因此我们需要让我们的符号变成外部链接。在Rust中让一个符号变成外部的方法，只有使它的相关项变成公共的(`pub`)和*可到达的*(在项和crate的根路径间没有私有模块)。
 
 ## 链接器脚本部分
 
@@ -70,7 +70,7 @@ $ cat link.x
 
 ### `SECTIONS`
 
-这部分描述了输入目标文件中的sections(也被称为*input sections*)是如何被安排进输出目标文件的sections(也被称为output sections)中的或者它们是否应该被丢弃。这里，我们定义两个输出sections:
+这部分描述了输入目标文件中的sections(也被称为*input sections*)要如何被安排进输出目标文件的sections(也被称为output sections)中的或者它们是否应该被丢弃。这里，我们定义两个输出sections:
 
 ``` text
   .vector_table ORIGIN(FLASH) : { /* .. */ } > FLASH
@@ -82,7 +82,7 @@ $ cat link.x
   .text : { /* .. */ } > FLASH
 ```
 
-`.text` 包含程序的子例程且坐落于 `FLASH` 的某些位置。它的开始地址没有指定，但是链接器将把它放在先前的输出section，`.vector_table` 之后。
+`.text` 包含程序的子程序且坐落于 `FLASH` 的某些位置。它的开始地址没有指定，但是链接器将把它放在先前的输出section，`.vector_table` 之后。
 
 输出 `.vector_table` section包含:
 
