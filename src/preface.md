@@ -31,8 +31,15 @@
 * [日文](https://tomoyuki-nakabayashi.github.io/embedonomicon/)
   ([repository](https://github.com/tomoyuki-nakabayashi/embedonomicon))
 
+<<<<<<< HEAD
 * [中文](https://xxchang.github.io/embedonomicon/)
   ([repository](https://github.com/xxchang/embedonomicon))
+=======
+* [Chinese](https://xxchang.github.io/embedonomicon/)
+  ([repository](https://github.com/xxchang/embedonomicon))
+  
+## Requirements
+>>>>>>> cfeaaa329e28a2f9ee8f1c7bc2a18a0a37d3de59
 
 ## 要求
 
