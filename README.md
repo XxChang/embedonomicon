@@ -1,6 +1,6 @@
 # The Embedonomicon
 
-> How to bootstrap support for a no_std target
+> 如何生成对一个no_std项目的支持
 
 This book is hosted at https://docs.rust-embedded.org/embedonomicon/
 
