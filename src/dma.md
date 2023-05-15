@@ -1,8 +1,8 @@
 # 直接存储器访问 (DMA)
 
-本节涉及到围绕DMA传输搭建一个存储安全的API的核心需求。
+本节会围绕DMA传输，讨论搭建一个内存安全的API的核心需求。
 
-DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来执行存储传输。一个DMA传输或多或少等于启动一个进程(看[`thread::spawn`])去执行一个`memcpy` 。我们将用fork-join模型去解释一个存储安全的API的要求。
+DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来执行存储传输。一个DMA传输或多或少等于启动一个进程(看[`thread::spawn`])去执行一个`memcpy` 。我们将用fork-join模型去解释一个内存安全的API的要求。
 
 [`thread::spawn`]: https://doc.rust-lang.org/std/thread/fn.spawn.html
 
@@ -24,7 +24,7 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 
 假设我们想要将`Serial1` API扩展成可以(a)异步地发送一个缓存区和(b)异步地填充一个缓存区。
 
-一开始我们将使用一个存储不安全的API，然后我们将迭代它直到它完全变成存储安全的API。在每一步，我们都将向你展示如何打破API，
+一开始我们将使用一个存储不安全的API，然后我们将迭代它直到它完全变成存储安全的API。在每一步，我们都将向你展示如何破开API，
 让你意识到当使用异步的存储操作时，有哪些问题需要被解决。
 
 ## 开场
@@ -71,7 +71,7 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 {{#include ../ci/dma/examples/one.rs:105:112}}
 ```
 
-在`start`中我们启动了一个DMA传输以填充一个在堆上分配的数组，然后`mem::forget`被返回的`Transfer`值。然后我们继续从`start`返回并执行函数`bar` 。
+在`start`中我们启动了一个DMA传输以填充一个在堆上分配的数组，然后`mem::forget`了被返回的`Transfer`值。然后我们继续从`start`返回并执行函数`bar` 。
 
 这一系列操作导致了未定义的行为。DMA传输向栈的存储区写入，但是当`start`返回时，那块存储区域会被释放，
 然后被`bar`重新用来分配像是`x`和`y`这样的变量。在运行时，这可能会导致变量`x`和`y`随机更改其值。DMA传输
@@ -96,9 +96,9 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 
 像之前一样，在`mem::forget` `Transfer`的值之后，DMA传输继续运行着。这次没有问题了，因为`buf`是静态分配的(比如`static mut`变量)，不是在栈上。
 
-## 重叠使用(Overlapping use)
+## 重复使用(Overlapping use)
 
-我们的API不会阻止用户在DMA传输过程中使用`Serial`接口。这可能导致传输失败或者数据丢失。
+我们的API没有阻止用户在DMA传输过程中再次使用`Serial`接口。这可能导致传输失败或者数据丢失。
 
 有许多方法可以禁止重叠使用。一个方法是让`Transfer`获取`Serial1`的所有权，然后当`wait`被调用时将它返回。
 
@@ -113,7 +113,7 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 {{#include ../ci/dma/examples/three.rs:71:81}}
 ```
 
-还有其它方法可以放置重叠使用。比如，可以往`Serial1`添加一个(`Cell`)标志，其指出是否一个DMA传输正在进行中。
+还有其它方法可以防止重叠使用。比如，可以往`Serial1`添加一个(`Cell`)标志，其指出是否一个DMA传输正在进行中。
 当标志被设置了，`read`，`write`，`read_exact`和`write_all`全都会在运行时返回一个错误(比如`Error::InUse`)。
 当使用`write_all` / `read_exact`时，会设置标志，在`Transfer.wait`中，标志会被清除。
 
@@ -151,49 +151,39 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 请注意`compiler_fence`比要求的强一些。比如，fences将防止在`x`上的操作被合并即使我们知道`buf`不会与`x`重叠(由于Rust的别名规则)。
 然而，没有比`compiler_fence`更精细的内部函数了。
 
-### 我们不需要内存屏障吗？
+### 我们需不需要内存屏障？
 
-That depends on the target architecture. In the case of Cortex M0 to M4F cores,
-[AN321] says:
+这取决于目标平台的架构。在Cortex M0到M4F核心的例子里，[AN321]说到：
 
 [AN321]: https://static.docs.arm.com/dai0321/a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf
 
-> 3.2 Typical usages
+> 3.2 主要场景
 >
 > (..)
 >
-> The use of DMB is rarely needed in Cortex-M processors because they do not
-> reorder memory transactions. However, it is needed if the software is to be
-> reused on other ARM processors, especially multi-master systems. For example:
+> 在Cortex-M处理器中，很少需要用到DMB因为它们不会重新排序存储传输。
+> 然而，如果软件要在其它ARM处理器中复用，那么就需要用到，特别是多主机系统。比如：
 >
-> - DMA controller configuration. A barrier is required between a CPU memory
->   access and a DMA operation.
+> - DMA控制器配置。在CPU存储访问和一个DMA操作间需要一个屏障。
 >
 > (..)
 >
-> 4.18 Multi-master systems
+> 4.18 多主机系统
 >
 > (..)
 >
-> Omitting the DMB or DSB instruction in the examples in Figure 41 on page 47
-> and Figure 42 would not cause any error because the Cortex-M processors:
+> 把47页图41和图42的例子中的DMB或者DSB指令去除掉不会导致任何错误，因为Cortex-M处理器：
 >
-> - do not re-order memory transfers
-> - do not permit two write transfers to be overlapped.
+> - 不会重新排序存储传输。
+> - 不会允许两个写传输重叠。
 
-Where Figure 41 shows a DMB (memory barrier) instruction being used before
-starting a DMA transaction.
+这里图41中展示了在启动DMA传输前使用了一个DMB（存储屏障）指令。
 
-In the case of Cortex-M7 cores you'll need memory barriers (DMB/DSB) if you are
-using the data cache (DCache), unless you manually invalidate the buffer used by
-the DMA. Even with the data cache disabled, memory barriers might still be
-required to avoid reordering in the store buffer.
+在Cortex-M7内核的例子中，如果你使用了数据缓存（DCache），那么你需要存储屏障（DMB/DSB），除非你手动地无效化被DMA使用的缓存。即使将数据缓存取消掉，可能依然需要内存屏障以避免存储缓存中出现重新排序。
 
-If your target is a multi-core system then it's very likely that you'll need
-memory barriers.
+如果你的目标平台是一个多核系统，那么很可能你需要内存屏障。
 
-If you do need the memory barrier then you need to use [`atomic::fence`] instead
-of `compiler_fence`. That should generate a DMB instruction on Cortex-M devices.
+如果你需要存储屏障，那么你需要使用[`atomic::fence`]而不是`compiler_fence`。这在Cortex-M设备上会生成一个DMB指令。
 
 [`atomic::fence`]: https://doc.rust-lang.org/core/sync/atomic/fn.fence.html
 

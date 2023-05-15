@@ -16,7 +16,7 @@
 
 这本书主要面向两个读者:
 
-- 希望为一个生态系统还没有支持的架构提供板级支持(比如，自Rust 1.28以来的Cortex-R)，或者为一个刚获得Rust支持的架构提供支持(比如 未来可能有Xtensa)的人
+- 希望为生态系统还没有支持的架构提供板级支持(比如，自Rust 1.28以来的Cortex-R)，或者为一个刚获得Rust支持的架构提供支持(比如 未来可能有Xtensa)的人
 
 - 对像是 [`cortex-m-rt`]，[`msp430-rt`] 和 [`riscv-rt`] 这样的 *runtime* 库的不寻常的实现感到好奇的人。 
 
@@ -31,15 +31,8 @@
 * [日文](https://tomoyuki-nakabayashi.github.io/embedonomicon/)
   ([repository](https://github.com/tomoyuki-nakabayashi/embedonomicon))
 
-<<<<<<< HEAD
 * [中文](https://xxchang.github.io/embedonomicon/)
   ([repository](https://github.com/xxchang/embedonomicon))
-=======
-* [Chinese](https://xxchang.github.io/embedonomicon/)
-  ([repository](https://github.com/xxchang/embedonomicon))
-  
-## Requirements
->>>>>>> cfeaaa329e28a2f9ee8f1c7bc2a18a0a37d3de59
 
 ## 要求
 

@@ -4,7 +4,7 @@
 
 ## 任意符号
 
-每当我们需要crates之间有一个稳定的符号接口时，我们主要使用`no_mangle`属性，有时是`export_name`属性。`export_name`attribtue采用一个字符串作为符号的名字，而`#[no_mangle]`本质上是`#[export_name = <item-name>]`的语法糖。
+当我们需要crates之间存在一个稳定的符号接口时，我们主要使用`no_mangle`属性，有时是`export_name`属性。`export_name`attribtue采用一个字符串作为符号的名字，而`#[no_mangle]`本质上是`#[export_name = <item-name>]`的语法糖。
 
 事实证明，名字并不局限于单个单词；我们可以使用任意的字符串，比如语句，作为`export_name`属性的参数。至少当输出格式是ELF时，任何不包含空字节的内容都可以。
 

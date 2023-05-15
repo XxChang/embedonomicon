@@ -4,7 +4,7 @@
 
 ## `#![no_std]` 是什么意思?
 
-`#![no_std]` 是一个crate层级的属性，其指出crate将链接到 [`core`] 而不是 [`std`] crate，但是这对应用来说意味着什么呢?
+`#![no_std]` 是一个crate层级的属性，其指出crate将链接到 [`core`] 而不是 [`std`] crate，然而这对应用来说意味着什么呢?
 
 [`core`]: https://doc.rust-lang.org/core/
 [`std`]: https://doc.rust-lang.org/std/
