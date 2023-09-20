@@ -1,0 +1,416 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>全局单例 - The Embedonomicon</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="preface.html">前言</a></li><li class="chapter-item expanded "><a href="smallest-no-std.html"><strong aria-hidden="true">1.</strong> 最简的 #![no_std] 程序</a></li><li class="chapter-item expanded "><a href="memory-layout.html"><strong aria-hidden="true">2.</strong> 存储布局</a></li><li class="chapter-item expanded "><a href="main.html"><strong aria-hidden="true">3.</strong> 一个 main 接口</a></li><li class="chapter-item expanded "><a href="exceptions.html"><strong aria-hidden="true">4.</strong> 异常处理</a></li><li class="chapter-item expanded "><a href="asm.html"><strong aria-hidden="true">5.</strong> 稳定的汇编</a></li><li class="chapter-item expanded "><a href="logging.html"><strong aria-hidden="true">6.</strong> 使用符号做日志</a></li><li class="chapter-item expanded "><a href="singleton.html" class="active"><strong aria-hidden="true">7.</strong> 全局单例</a></li><li class="chapter-item expanded "><a href="dma.html"><strong aria-hidden="true">8.</strong> DMA</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="compiler-support.html">与编译器支持有关的笔记</a></li><li class="chapter-item expanded affix "><a href="custom-target.html">制造一个自定义目标</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Embedonomicon</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="全局单例"><a class="header" href="#全局单例">全局单例</a></h1>
+<p>在这部分会说到如何实现一个全局的，可共享的单例。 The embedded Rust book 中提到了局部的，拥有所有权的单例，
+这对Rust来说几乎是独一无二的。全局单例本质上就是在C和C++中见到的那些单例模式；它们不止出现在嵌入式开发中，但是因为它们涉及到符号，所以似乎很适合这本书的内容。</p>
+<blockquote>
+<p><strong>TODO</strong>(resources team) link &quot;the embedded Rust book&quot; to the singletons
+section when it's up</p>
+</blockquote>
+<p>为了解释这部分，我们将扩展我们在上部分开发的日志以支持全局日志记录。结果与在the embedded Rust book提到的<code>#[global_allocator]</code>功能非常相似。</p>
+<blockquote>
+<p><strong>TODO</strong>(resources team) link <code>#[global_allocator]</code> to the collections chapter
+of the book when it's in a more stable location.</p>
+</blockquote>
+<p>总结下我们需要的东西：</p>
+<p>在上一部分我们创造了一个<code>log!</code>宏以通过一个特定的logger去记录信息，logger是一个实现了<code>Log</code> trait的值。
+<code>log!</code>宏的语法是<code>log!(logger, &quot;String&quot;)</code>。我们想要扩展下宏，让<code>log!(&quot;String&quot;)</code>也可以工作。没有<code>logger</code>的版本的宏可以通过一个全局的logger去记录信息；这是<code>std::println!</code>的工作方式。我们也需要一个机制去声明全局logger是什么；这部分与<code>#[global_allocator]</code>相似。</p>
+<p>可能是在top crate中声明了全局logger，也可能是在top crate中定义了全局logger的类型。在这种情况下，依赖<em>不</em>知道全局logger的确切类型。为了支持这种情况，我们需要一些间接方法。</p>
+<p>我们只在<code>log</code>库中声明全局logger的<em>接口</em>，而不是在<code>log</code>库中硬编码全局logger的类型。我们将会给<code>log</code>库添加一个新的trait，<code>GlobalLog</code>。<code>log!</code>宏也必须要使用这个trait 。</p>
+<pre><code class="language-console">$ cat ../log/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_std]
+
+<span class="boring">fn main() {
+</span>// NEW!
+pub trait GlobalLog: Sync {
+    fn log(&amp;self, address: u8);
+}
+
+pub trait Log {
+    type Error;
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+#[macro_export]
+macro_rules! log {
+    // NEW!
+    ($string:expr) =&gt; {
+        unsafe {
+            extern &quot;Rust&quot; {
+                static LOGGER: &amp;'static dyn $crate::GlobalLog;
+            }
+
+            #[export_name = $string]
+            #[link_section = &quot;.log&quot;]
+            static SYMBOL: u8 = 0;
+
+            $crate::GlobalLog::log(LOGGER, &amp;SYMBOL as *const u8 as usize as u8)
+        }
+    };
+
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log&quot;]
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+
+// NEW!
+#[macro_export]
+macro_rules! global_logger {
+    ($logger:expr) =&gt; {
+        #[no_mangle]
+        pub static LOGGER: &amp;dyn $crate::GlobalLog = &amp;$logger;
+    };
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这里有很多东西要拆开来看。</p>
+<p>先从trait开始。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait GlobalLog: Sync {
+    fn log(&amp;self, address: u8);
+}
+<span class="boring">}</span></code></pre></pre>
+<p><code>GlobalLog</code>和<code>Log</code>都有一个<code>log</code>方法。不同的是，<code>GlobalLog</code>需要获取一个对接收者的共享的引用(<code>&amp;self</code>)。
+因为全局logger是一个<code>static</code>变量所以这是必须的。之后会提到更多。</p>
+<p>另一个不同是，<code>GlobalLog.log</code>不返回一个<code>Result</code>。 这意味着它<em>不</em>会向调用者报告错误。这对用来实现全局单例的traits来说不是一个严格的要求。全局单例中有错误处理很好，但是另一方面全局版本的<code>log!</code>宏的的所有用户必须就错误类型达成一致。这里通过让<code>GlobalLog</code>的实现者来处理错误可以简化这个接口。</p>
+<p>还有另一个不同，<code>GlobalLog</code>要求实现者是<code>Sync</code>的，它可以在线程间被共享。对于放置在<code>static</code>变量中的值来说这是一个要求；它们的类型必须实现<code>Sync</code> trait 。</p>
+<p>此时可能还不完全清楚接口为什么必须要这样。库的其它部分将会解释得更清楚，所以请继续读下去。</p>
+<p>接下来是<code>log!</code>宏：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>    ($string:expr) =&gt; {
+        unsafe {
+            extern &quot;Rust&quot; {
+                static LOGGER: &amp;'static dyn $crate::GlobalLog;
+            }
+
+            #[export_name = $string]
+            #[link_section = &quot;.log&quot;]
+            static SYMBOL: u8 = 0;
+
+            $crate::GlobalLog::log(LOGGER, &amp;SYMBOL as *const u8 as usize as u8)
+        }
+    };
+<span class="boring">}</span></code></pre></pre>
+<p>当不使用一个指定的<code>$logger</code>去调用宏的时候，宏会使用一个被叫做<code>LOGGER</code>的<code>extern</code> <code>static</code>变量去记录信息。这个变量<em>是</em>定义在其它地方的全局logger；这就是为什么我们会使用<code>extern</code>块。我们可以在<a href="main.html">main接口</a>章节中看到这种模式。</p>
+<p>我们需要声明一个与<code>LOGGER</code>有关的类型要不然代码不会做类型检查。此时我们不知道<code>LOGGER</code>的具体类型，但是我们知道，或者至少要求，它要实现<code>GlobalLog</code> trait，所以这里我们可以使用一个trait对象。</p>
+<p>剩余的宏展开与局部版本的<code>log!</code>宏展开很像，因此我不会在这里解释它，因为在<a href="logging.html">先前</a>的章节中已经解释过了。</p>
+<p>现在我们知道<code>LOGGER</code>必须是一个trait对象，为什么我们要在<code>GlobalLog</code>中去掉关联的<code>Error</code>类型更清楚了。如果我们没有去掉<code>Error</code>类型，那么我们将需要为<code>LOGGER</code>的类型签名中的<code>Error</code>挑选一个类型。这就是我之前提到的“<code>log!</code>的所有用户需要对错误类型达成一致”。</p>
+<p>现在是最后的片段：<code>global_logger!</code>宏。它可以是一个过程宏attribute，但是写一个<code>macro_rules!</code>宏更简单。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[macro_export]
+macro_rules! global_logger {
+    ($logger:expr) =&gt; {
+        #[no_mangle]
+        pub static LOGGER: &amp;dyn $crate::GlobalLog = &amp;$logger;
+    };
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这个宏生成了<code>log!</code>宏要使用的<code>LOGGER</code>变量。因为我们需要一个稳定的ABI接口，所以我们使用了<code>no_mangle</code> attribute 。这样子的话，<code>LOGGER</code>的符号名就会是<code>LOGGER</code>，这是<code>log!</code>宏期望的符号名。</p>
+<p>另外重要的一点是，这个静态变量的类型必须精确地匹配在<code>log!</code>宏的展开中所使用的类型。如果它们不匹配，由于ABI的误匹配将会导致坏事发生。</p>
+<p>让我们来写一个使用这个新的全局logger功能的例子。</p>
+<pre><code class="language-console">$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m::interrupt;
+use cortex_m_semihosting::{
+    debug,
+    hio::{self, HStdout},
+};
+
+use log::{global_logger, log, GlobalLog};
+use rt::entry;
+
+struct Logger;
+
+global_logger!(Logger);
+
+entry!(main);
+
+fn main() -&gt; ! {
+    log!(&quot;Hello, world!&quot;);
+
+    log!(&quot;Goodbye&quot;);
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}
+
+impl GlobalLog for Logger {
+    fn log(&amp;self, address: u8) {
+        // we use a critical section (`interrupt::free`) to make the access to the
+        // `static mut` variable interrupt safe which is required for memory safety
+        interrupt::free(|_| unsafe {
+            static mut HSTDOUT: Option&lt;HStdout&gt; = None;
+
+            // lazy initialization
+            if HSTDOUT.is_none() {
+                HSTDOUT = Some(hio::hstdout()?);
+            }
+
+            let hstdout = HSTDOUT.as_mut().unwrap();
+
+            hstdout.write_all(&amp;[address])
+        }).ok(); // `.ok()` = ignore errors
+    }
+}</code></pre></pre>
+<blockquote>
+<p><strong>TODO</strong>(resources team) use <code>cortex_m::Mutex</code> instead of a <code>static mut</code>
+variable when <code>const fn</code> is stabilized.</p>
+</blockquote>
+<p>我们必须添加<code>cortex-m</code>到这个依赖上。</p>
+<pre><code class="language-console">$ tail -n5 Cargo.toml
+</code></pre>
+<pre><code class="language-text">[dependencies]
+cortex-m = &quot;0.5.7&quot;
+cortex-m-semihosting = &quot;0.3.1&quot;
+log = { path = &quot;../log&quot; }
+rt = { path = &quot;../rt&quot; }
+</code></pre>
+<p>这是在<a href="logging.html">先前</a>章节中所写的某个例子的移植。这里的输出和之前的是一样的。</p>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0001
+</code></pre>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000001 g     O .log	00000001 Goodbye
+00000000 g     O .log	00000001 Hello, world!
+</code></pre>
+<hr />
+<p>一些读者可能会担心这种全局单例的实现不是零开销的，因为使用trait对象涉及到动态分发(dynamic dispatch)，通过一个虚表(vtable)查找去执行方法调用。</p>
+<p>然而，LLVM足够聪明，可以在使用优化/LTO编译时，消除动态分发。通过在符号表中搜索<code>LOGGER</code>可以确认这一点。</p>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -t | grep LOGGER
+</code></pre>
+<pre><code class="language-text">
+</code></pre>
+<p>如果没有<code>static</code>，则意味着没有虚表，LLVM能够把所有的<code>LOGGER.log</code>调用变成<code>Logger.log</code>调用。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="logging.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="dma.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="logging.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="dma.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

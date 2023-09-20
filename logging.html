@@ -1,0 +1,626 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>使用符号做日志 - The Embedonomicon</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="preface.html">前言</a></li><li class="chapter-item expanded "><a href="smallest-no-std.html"><strong aria-hidden="true">1.</strong> 最简的 #![no_std] 程序</a></li><li class="chapter-item expanded "><a href="memory-layout.html"><strong aria-hidden="true">2.</strong> 存储布局</a></li><li class="chapter-item expanded "><a href="main.html"><strong aria-hidden="true">3.</strong> 一个 main 接口</a></li><li class="chapter-item expanded "><a href="exceptions.html"><strong aria-hidden="true">4.</strong> 异常处理</a></li><li class="chapter-item expanded "><a href="asm.html"><strong aria-hidden="true">5.</strong> 稳定的汇编</a></li><li class="chapter-item expanded "><a href="logging.html" class="active"><strong aria-hidden="true">6.</strong> 使用符号做日志</a></li><li class="chapter-item expanded "><a href="singleton.html"><strong aria-hidden="true">7.</strong> 全局单例</a></li><li class="chapter-item expanded "><a href="dma.html"><strong aria-hidden="true">8.</strong> DMA</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="compiler-support.html">与编译器支持有关的笔记</a></li><li class="chapter-item expanded affix "><a href="custom-target.html">制造一个自定义目标</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Embedonomicon</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="使用符号做日志"><a class="header" href="#使用符号做日志">使用符号做日志</a></h1>
+<p>这部分将展示如何使用符号和ELF格式去实现超级廉价的日志。</p>
+<h2 id="任意符号"><a class="header" href="#任意符号">任意符号</a></h2>
+<p>当我们想要crates之间存在一个稳定的符号接口时，我们主要使用<code>no_mangle</code>属性，有时是<code>export_name</code>属性。<code>export_name</code> attribtue采用一个字符串作为符号的名字，而<code>#[no_mangle]</code>本质上是<code>#[export_name = &lt;item-name&gt;]</code>的语法糖。</p>
+<p>事实证明，名字并不局限于单个单词；我们可以使用任意的字符串，比如语句，作为<code>export_name</code>属性的参数。至少当输出格式是ELF时，任何不包含空字节的内容都可以。</p>
+<p>让我们看下:</p>
+<pre><code class="language-console">$ cargo new --lib foo
+
+$ cat foo/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[export_name = &quot;Hello, world!&quot;]
+#[used]
+static A: u8 = 0;
+
+#[export_name = &quot;こんにちは&quot;]
+#[used]
+static B: u8 = 0;
+<span class="boring">}</span></code></pre></pre>
+<pre><code class="language-console">$ ( cd foo &amp;&amp; cargo nm --lib )
+foo-d26a39c34b4e80ce.3lnzqy0jbpxj4pld.rcgu.o:
+0000000000000000 r Hello, world!
+0000000000000000 V __rustc_debug_gdb_scripts_section__
+0000000000000000 r こんにちは
+</code></pre>
+<p>你能看出这有什么用吗?</p>
+<h2 id="编码"><a class="header" href="#编码">编码</a></h2>
+<p>这是接下来要做的：我们将为每个日志信息创造一个<code>static</code>变量，但是不是将信息存储<em>进</em>变量中，我们将把信息存储进变量的<em>符号名</em>中。然后，我们将记录的不是<code>static</code>变量的内容，而是它们的地址。</p>
+<p>只要<code>static</code>变量的大小不是零，每个变量的地址就会不同。这里我们要做的是将每个信息有效地编码为一个唯一的标识符，正好变量的地址满足这个要求。日志系统必须有能力将这个id解码回日志信息。</p>
+<p>让我们来编写一些代码解释下这个想法。</p>
+<p>在这个例子里我们将需要一些工具来执行I/O操作，因此我们将使用<a href="https://crates.io/crates/cortex-m-semihosting"><code>cortex-m-semihosting</code></a>库。Semihosting是一个技术，它可以让一个目标设备借用主机的I/O功能；这里，主机通常是指用来调试目标设备的机器。在我们的例子里，QEMU支持开箱即用的semihosting，因此不需要调试器。在一个真正的设备上你可以使用其它方法来执行I/O操作比如一个串口；在这个例子里我们使用semihosting，因为这是在QEMU上进行I/O操作的最简单的方法。</p>
+<p>这里是代码</p>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use core::fmt::Write;
+use cortex_m_semihosting::{debug, hio};
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let mut hstdout = hio::hstdout().unwrap();
+
+    #[export_name = &quot;Hello, world!&quot;]
+    static A: u8 = 0;
+
+    let _ = writeln!(hstdout, &quot;{:#x}&quot;, &amp;A as *const u8 as usize);
+
+    #[export_name = &quot;Goodbye&quot;]
+    static B: u8 = 0;
+
+    let _ = writeln!(hstdout, &quot;{:#x}&quot;, &amp;B as *const u8 as usize);
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}</code></pre></pre>
+<p>我们也可以使用<code>debug::exit</code> API来让程序终结QEMU进程。这很方便，这样我们就不必手动终结QEMU进程了。</p>
+<p>这里是Cargo.toml的<code>dependencies</code>部分:</p>
+<pre><code class="language-toml">[dependencies]
+cortex-m-semihosting = &quot;0.3.1&quot;
+rt = { path = &quot;../rt&quot; }
+</code></pre>
+<p>现在我们可以编译程序了</p>
+<pre><code class="language-console">$ cargo build
+</code></pre>
+<p>为了让它跑起来，我们需要给QEMU命令添加 <code>--semihosting-config</code> 标志:</p>
+<pre><code class="language-console">$ qemu-system-arm \
+      -cpu cortex-m3 \
+      -machine lm3s6965evb \
+      -nographic \
+      -semihosting-config enable=on,target=native \
+      -kernel target/thumbv7m-none-eabi/debug/app
+</code></pre>
+<pre><code class="language-text">0x1fe0
+0x1fe1
+</code></pre>
+<blockquote>
+<p><strong>注意</strong>：你主机上获得的地址可能不是这些地址，因为当工具链变了的时候<code>static</code>变量的地址不保障仍然是一样的(比如 优化可能会改进地址)。</p>
+</blockquote>
+<p>现在我们有两个地址被打印到控制台上了。</p>
+<h2 id="解码"><a class="header" href="#解码">解码</a></h2>
+<p>我们如何把这些地址转换成字符串呢?答案在ELF文件的符号表中。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.rodata\s*0*1\b'
+</code></pre>
+<pre><code class="language-text">00001fe1 g       .rodata		 00000001 Goodbye
+00001fe0 g       .rodata		 00000001 Hello, world!
+$ # 第一列是符号地址；最后一列是符号名
+</code></pre>
+<p><code>objdump -t</code> 打印符号表。这个表包含<em>所有</em>的符号但是我们只查找<code>.rodata</code>中的符号，且它的大小只有一个字节(我们的变量类型是<code>u8</code>) 。</p>
+<p>需要注意的是，在优化程序时，符号的地址可能会改变。让我们检查下。</p>
+<blockquote>
+<p><strong>小技巧</strong> 你可以在Cargo配置文件(<code>.cargo/config</code>)中把 <code>target.thumbv7m-none-eabi.runner</code> 设置成之前(<code>qemu-system-arm -cpu (..)</code>) 的QEMU命令以让<code>cargo run</code>使用这个<em>runner</em>执行输出的二进制项。</p>
+</blockquote>
+<pre><code class="language-console">$ head -n2 .cargo/config
+</code></pre>
+<pre><code class="language-toml">[target.thumbv7m-none-eabi]
+runner = &quot;qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel&quot;
+</code></pre>
+<pre><code class="language-console">$ cargo run --release
+     Running `qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel target/thumbv7m-none-eabi/release/app`
+</code></pre>
+<pre><code class="language-text">0xb9c
+0xb9d
+</code></pre>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -t | grep '\.rodata\s*0*1\b'
+</code></pre>
+<pre><code class="language-text">00000b9d g     O .rodata	00000001 Goodbye
+00000b9c g     O .rodata	00000001 Hello, world!
+</code></pre>
+<p>所以，请确保在找ELF文件中的字符串的时候，这个ELF文件是你执行的那个ELF文件。</p>
+<p>当然，可以使用一个工具自动检查ELF文件中的字符串，该工具可以解析ELF文件包含的符号表(<code>.symtab</code>) 。如何实现这样的工具超出了这本书的范围，可以作为一个练习留给读者。</p>
+<h2 id="使它变成零开销"><a class="header" href="#使它变成零开销">使它变成零开销</a></h2>
+<p>我们能做得更好吗?是的，我们可以！</p>
+<p>现在的实现把<code>static</code>变量放在<code>.rodata</code>中，这意味着它们会占用Flash的大小即使我们从不会使用它们的内容。使用一点链接器脚本魔法我们可以让它们占用的Flash空间为<em>零</em>。</p>
+<pre><code class="language-console">$ cat log.x
+</code></pre>
+<pre><code class="language-text">SECTIONS
+{
+  .log 0 (INFO) : {
+    *(.log);
+  }
+}
+</code></pre>
+<p>我们将把<code>static</code>变量放在这个新的输出的<code>.log</code> section中。这个链接器脚本将把输入目标文件的<code>.log</code> section中的所有符号集中起来并把它们放进一个输出的<code>.log</code> section中。我们在<a href="memory-layout.html">存储布局</a>章节中已经见过这个方法了。</p>
+<p>这个<code>(INFO)</code>部分是新的知识点；这告诉链接器这个section是一个非可分配部分。非可分配部分在ELF中作为元数据被保留起来但是它们不会被加载到目标设备上。</p>
+<p>我们也可以指定这个输出section的起始地址：<code>.log 0 (INFO)</code> 中的<code>0</code> 。</p>
+<p>我们可以做的其它改进是从格式化的I/O(<code>fmt::Write</code>)切换到二进制I/O，这是指把地址作为字节而不是字符串往主机发送。</p>
+<p>二进制序列化很难，但是把每个地址当做一个字节来序列化就很简单了，这样我们就不必担心大小端或者分帧。这个格式的缺点是单个字节只能表示最多256个不同的地址。</p>
+<p>添加上这些修改：</p>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m_semihosting::{debug, hio};
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let mut hstdout = hio::hstdout().unwrap();
+
+    #[export_name = &quot;Hello, world!&quot;]
+    #[link_section = &quot;.log&quot;] // &lt;- NEW!
+    static A: u8 = 0;
+
+    let address = &amp;A as *const u8 as usize as u8;
+    hstdout.write_all(&amp;[address]).unwrap(); // &lt;- CHANGED!
+
+    #[export_name = &quot;Goodbye&quot;]
+    #[link_section = &quot;.log&quot;] // &lt;- NEW!
+    static B: u8 = 0;
+
+    let address = &amp;B as *const u8 as usize as u8;
+    hstdout.write_all(&amp;[address]).unwrap(); // &lt;- CHANGED!
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}</code></pre></pre>
+<p>在运行这个程序之前，必须要在传递给链接器的参数之后添加<code>-Tlog.x</code> 。可以在Cargo的配置文件中完成它。</p>
+<pre><code class="language-console">$ cat .cargo/config
+</code></pre>
+<pre><code class="language-toml">[target.thumbv7m-none-eabi]
+runner = &quot;qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel&quot;
+rustflags = [
+  &quot;-C&quot;, &quot;link-arg=-Tlink.x&quot;,
+  &quot;-C&quot;, &quot;link-arg=-Tlog.x&quot;, # &lt;- NEW!
+]
+
+[build]
+target = &quot;thumbv7m-none-eabi&quot;
+</code></pre>
+<p>现在可以运行了!因为现在输出是一个二进制的格式，所以通过管道将它输入<code>xxd</code>命令中重新格式化它为十六进制的字符串。</p>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0001
+</code></pre>
+<p>地址是<code>0x00</code>和<code>0x01</code> 。让我们现在看下符号表。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000001 g     O .log	00000001 Goodbye
+00000000 g     O .log	00000001 Hello, world!
+</code></pre>
+<p>这是我们的字符串。可以看到它们的地址现在开始于零；这是因为输出的<code>.log</code> section设置了一个起始地址。</p>
+<p>每个变量是一个字节的大小因为使用了<code>u8</code>作为它们的类型。如果我们使用类似于<code>u16</code>的东西，那么所有的地址都是偶数，我们将无法有效的使用所有的地址空间(<code>0...255</code>) 。</p>
+<h2 id="打包"><a class="header" href="#打包">打包</a></h2>
+<p>注意到，记录一个字符串的步骤总是一样的，因此我们可以把它们重构为宏放在自己的库中。此外，通过将I/O部分抽象成一个trait，我们还可以提高日志库的可重用性。</p>
+<pre><code class="language-console">$ cargo new --lib log
+
+$ cat log/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_std]
+
+<span class="boring">fn main() {
+</span>pub trait Log {
+    type Error;
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+#[macro_export]
+macro_rules! log {
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log&quot;]
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+<span class="boring">}</span></code></pre></pre>
+<p>因为这个库依赖<code>.log</code> section，所以它应该负责提供<code>log.x</code>链接器脚本，让我们来实现这一需求。</p>
+<pre><code class="language-console">$ mv log.x ../log/
+</code></pre>
+<pre><code class="language-console">$ cat ../log/build.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">use std::{env, error::Error, fs::File, io::Write, path::PathBuf};
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    // Put the linker script somewhere the linker can find it
+    let out = PathBuf::from(env::var(&quot;OUT_DIR&quot;)?);
+
+    File::create(out.join(&quot;log.x&quot;))?.write_all(include_bytes!(&quot;log.x&quot;))?;
+
+    println!(&quot;cargo:rustc-link-search={}&quot;, out.display());
+
+    Ok(())
+}</code></pre></pre>
+<p>现在我们可以重构我们的应用，让它使用<code>log!</code>宏:</p>
+<pre><code class="language-console">$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m_semihosting::{
+    debug,
+    hio::{self, HStdout},
+};
+
+use log::{log, Log};
+use rt::entry;
+
+struct Logger {
+    hstdout: HStdout,
+}
+
+impl Log for Logger {
+    type Error = ();
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), ()&gt; {
+        self.hstdout.write_all(&amp;[address])
+    }
+}
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let hstdout = hio::hstdout().unwrap();
+    let mut logger = Logger { hstdout };
+
+    let _ = log!(logger, &quot;Hello, world!&quot;);
+
+    let _ = log!(logger, &quot;Goodbye&quot;);
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}</code></pre></pre>
+<p>不要忘记将<code>Cargo.toml</code>文件更新成依赖新的<code>log</code>库 。</p>
+<pre><code class="language-console">$ tail -n4 Cargo.toml
+</code></pre>
+<pre><code class="language-toml">[dependencies]
+cortex-m-semihosting = &quot;0.3.1&quot;
+log = { path = &quot;../log&quot; }
+rt = { path = &quot;../rt&quot; }
+</code></pre>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0001
+</code></pre>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000001 g     O .log	00000001 Goodbye
+00000000 g     O .log	00000001 Hello, world!
+</code></pre>
+<p>与之前一样的输出!</p>
+<h2 id="额外任务多层日志等级"><a class="header" href="#额外任务多层日志等级">额外任务：多层日志等级</a></h2>
+<p>许多日志框架提供方法让你可以使用不同的<em>日志等级</em>去记录信息。这些日志等级表示信息的严重性：“这是一个错误”，“这只是一个警告”，等等。当搜寻，比如，错误信息时，这些日志等级可以被用来过滤掉不重要的信息。</p>
+<p>我们可以扩展我们的日志库，让它在不增加空间的情况下支持日志等级。这是我们接下来要做的：</p>
+<p>我们有一个与这些信息相关的平铺的地址空间：从<code>0</code>到<code>255</code>(包含255)。为了让事情简单点，我们只想区分错误信息和警告信息。我们可以把所有的错误信息放在地址空间的开始处，并将所有的警告信息放在错误信息之后。如果解码器知道第一个警告信息的地址，那么它可以用这个地址分类出消息来。这个方法可以被扩展到支持两个以上的日志等级。</p>
+<p>通过使用两个新的宏：<code>error!</code>和<code>warn!</code>替代<code>log</code>宏来测试下这个方法。</p>
+<pre><code class="language-console">$ cat ../log/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_std]
+
+<span class="boring">fn main() {
+</span>pub trait Log {
+    type Error;
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+/// Logs messages at the ERROR log level
+#[macro_export]
+macro_rules! error {
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log.error&quot;] // &lt;- CHANGED!
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+
+/// Logs messages at the WARNING log level
+#[macro_export]
+macro_rules! warn {
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log.warning&quot;] // &lt;- CHANGED!
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+<span class="boring">}</span></code></pre></pre>
+<p>通过将信息放在不同的link sections中，可以区分错误和警告。</p>
+<p>下一个必须要做的事是修改链接器脚本，将错误信息放在警告信息之前。</p>
+<pre><code class="language-console">$ cat ../log/log.x
+</code></pre>
+<pre><code class="language-text">SECTIONS
+{
+  .log 0 (INFO) : {
+    *(.log.error);
+    __log_warning_start__ = .;
+    *(.log.warning);
+  }
+}
+</code></pre>
+<p>我们也将错误和警告之间的边界命名为<code>__log_warning_start__</code>。这个符号的地址将是第一个警告信息的地址。</p>
+<p>我们现在可以改下应用，让应用使用这些新的宏。</p>
+<pre><code class="language-console">$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m_semihosting::{
+    debug,
+    hio::{self, HStdout},
+};
+
+use log::{error, warn, Log};
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let hstdout = hio::hstdout().unwrap();
+    let mut logger = Logger { hstdout };
+
+    let _ = warn!(logger, &quot;Hello, world!&quot;); // &lt;- CHANGED!
+
+    let _ = error!(logger, &quot;Goodbye&quot;); // &lt;- CHANGED!
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}
+
+struct Logger {
+    hstdout: HStdout,
+}
+
+impl Log for Logger {
+    type Error = ();
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), ()&gt; {
+        self.hstdout.write_all(&amp;[address])
+    }
+}</code></pre></pre>
+<p>输出不会改变太多：</p>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0100
+</code></pre>
+<p>输出仍然是两个字节，但是错误被赋予了地址0，警告被赋予了地址1，即使警告被先记录。</p>
+<p>现在看一下符号表。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000000 g     O .log	00000001 Goodbye
+00000001 g     O .log	00000001 Hello, world!
+00000001 g       .log	00000000 __log_warning_start__
+</code></pre>
+<p>现在在<code>.log</code> section中，有了一个额外符号，<code>__log_warning_start__</code> 。这个符号的地址是第一个警告信息的地址。地址低于这个值的符号是错误，剩余的符号是警告。</p>
+<p>使用一个合适的解码器你可以从所有这些信息获得以下人类可读的输出：</p>
+<pre><code class="language-text">WARNING Hello, world!
+ERROR Goodbye
+</code></pre>
+<hr />
+<p>如果你喜欢这部分，看一下<a href="https://crates.io/crates/stlog"><code>stlog</code></a>日志框架，它完整实现了这个想法。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="asm.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="singleton.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="asm.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="singleton.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

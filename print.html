@@ -1,0 +1,3258 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The Embedonomicon</title>
+        <meta name="robots" content="noindex" />
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="preface.html">前言</a></li><li class="chapter-item expanded "><a href="smallest-no-std.html"><strong aria-hidden="true">1.</strong> 最简的 #![no_std] 程序</a></li><li class="chapter-item expanded "><a href="memory-layout.html"><strong aria-hidden="true">2.</strong> 存储布局</a></li><li class="chapter-item expanded "><a href="main.html"><strong aria-hidden="true">3.</strong> 一个 main 接口</a></li><li class="chapter-item expanded "><a href="exceptions.html"><strong aria-hidden="true">4.</strong> 异常处理</a></li><li class="chapter-item expanded "><a href="asm.html"><strong aria-hidden="true">5.</strong> 稳定的汇编</a></li><li class="chapter-item expanded "><a href="logging.html"><strong aria-hidden="true">6.</strong> 使用符号做日志</a></li><li class="chapter-item expanded "><a href="singleton.html"><strong aria-hidden="true">7.</strong> 全局单例</a></li><li class="chapter-item expanded "><a href="dma.html"><strong aria-hidden="true">8.</strong> DMA</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="compiler-support.html">与编译器支持有关的笔记</a></li><li class="chapter-item expanded affix "><a href="custom-target.html">制造一个自定义目标</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Embedonomicon</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="嵌入式宝典"><a class="header" href="#嵌入式宝典">嵌入式宝典</a></h1>
+<p>嵌入式宝典将会带领你从零创造一个 <code>#![no_std]</code> 应用，经历为Coterx-M微控制器搭建特定于架构的功能的开发迭代过程。</p>
+<h2 id="目的"><a class="header" href="#目的">目的</a></h2>
+<p>通过阅读这本书你将会学到</p>
+<ul>
+<li>
+<p>搭建一个 <code>#![no_std]</code> 应用。这比搭建一个 <code>#![no_std]</code> 库更复杂，因为目标平台可能没有运行操作系统(或者你的目标就是搭建一个操作系统!)，而且你的程序可能是目标平台中运行的唯一一个进程(或者第一个进程)。在这种情况下，程序可能需要为目标平台进行定制。</p>
+</li>
+<li>
+<p>精细地控制一个Rust程序的存储布局的技巧。你将学到链接器(linkers)，链接器脚本和可以用来控制Rust程序的某些ABI的 Rust features 。</p>
+</li>
+<li>
+<p>如何实现可以被静态重载(没有运行时消耗)的默认函数。</p>
+</li>
+</ul>
+<h2 id="目标读者"><a class="header" href="#目标读者">目标读者</a></h2>
+<p>这本书主要面向两个读者:</p>
+<ul>
+<li>
+<p>希望为生态系统还没有支持的架构提供板级支持(比如，自Rust 1.28以来的Cortex-R)，或者为一个刚获得Rust支持的架构提供帮助(比如 未来可能有Xtensa)的人</p>
+</li>
+<li>
+<p>对形如 <a href="https://crates.io/crates/cortex-m-rt"><code>cortex-m-rt</code></a>，<a href="https://crates.io/crates/msp430-rt"><code>msp430-rt</code></a> 和 <a href="https://crates.io/crates/riscv-rt"><code>riscv-rt</code></a> 这样的 <em>runtime</em> 库的不寻常的实现感到好奇的人。 </p>
+</li>
+</ul>
+<h2 id="翻译"><a class="header" href="#翻译">翻译</a></h2>
+<p>这本书已经被慷慨的志愿者们翻译了。如果你想把你的翻译列在这里，请打开一个PR添加它。</p>
+<ul>
+<li>
+<p><a href="https://tomoyuki-nakabayashi.github.io/embedonomicon/">日文</a>
+(<a href="https://github.com/tomoyuki-nakabayashi/embedonomicon">repository</a>)</p>
+</li>
+<li>
+<p><a href="https://xxchang.github.io/embedonomicon/">中文</a>
+(<a href="https://github.com/xxchang/embedonomicon">repository</a>)</p>
+</li>
+</ul>
+<h2 id="要求"><a class="header" href="#要求">要求</a></h2>
+<p>这本书是自洽的。读者不需要熟悉Cortex-M架构，也不需要一个Cortex-M微控制器 -- 这本书里包含
+的所有例子都能在QEMU中测试。然而，需要安装下面的工具来运行和检查这本书中的示例:</p>
+<ul>
+<li>
+<p>这本书中所有代码使用的是2018版的Rust。如果你不熟悉2018的特性和术语，阅读 <a href="https://rust-lang-nursery.github.io/edition-guide/"><code>edition guide</code></a> 。</p>
+</li>
+<li>
+<p>Rust 1.31 或者更新的具有ARM Cortex-M编译支持的工具链。</p>
+</li>
+<li>
+<p><a href="https://github.com/japaric/cargo-binutils"><code>cargo-binutils</code></a>. v0.1.4 或者更新的版本。</p>
+</li>
+<li>
+<p><a href="https://crates.io/crates/cargo-edit"><code>cargo-edit</code></a>.</p>
+</li>
+<li>
+<p>有ARM仿真支持的QEMU。<code>qemu-system-arm</code> 程序必须被安装在你的电脑上。</p>
+</li>
+<li>
+<p>有ARM支持的GDB 。</p>
+</li>
+</ul>
+<h3 id="安装示例"><a class="header" href="#安装示例">安装示例</a></h3>
+<p>所有操作系统通用的指令</p>
+<pre><code class="language-console">$ # Rust 工具链
+$ # 如果你是从零开始，从 https://rustup.rs/ 获取rustup
+$ rustup default stable
+
+$ # 工具链应该比这个更新
+$ rustc -V
+rustc 1.31.0 (abe02cefd 2018-12-04)
+
+$ rustup target add thumbv7m-none-eabi
+
+$ # cargo-binutils
+$ cargo install cargo-binutils
+
+$ rustup component add llvm-tools-preview
+
+</code></pre>
+<h4 id="macos"><a class="header" href="#macos">macOS</a></h4>
+<pre><code class="language-console">$ # arm-none-eabi-gdb
+$ # 你可能需要先运行 `brew tap Caskroom/tap`
+$ brew install --cask gcc-arm-embedded
+
+$ # QEMU
+$ brew install qemu
+</code></pre>
+<h4 id="ubuntu-1604"><a class="header" href="#ubuntu-1604">Ubuntu 16.04</a></h4>
+<pre><code class="language-console">$ # arm-none-eabi-gdb
+$ sudo apt install gdb-arm-none-eabi
+
+$ # QEMU
+$ sudo apt install qemu-system-arm
+</code></pre>
+<h4 id="ubuntu-1804-或者-debian"><a class="header" href="#ubuntu-1804-或者-debian">Ubuntu 18.04 或者 Debian</a></h4>
+<pre><code class="language-console">$ # gdb-multiarch -- 当你希望启动gdb时，使用 `gdb-multiarch`
+$ sudo apt install gdb-multiarch
+
+$ # QEMU
+$ sudo apt install qemu-system-arm
+</code></pre>
+<h4 id="windows"><a class="header" href="#windows">Windows</a></h4>
+<ul>
+<li>
+<p><a href="https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads">arm-none-eabi-gdb</a>.
+The GNU Arm Embedded Toolchain 包括 GDB 。</p>
+</li>
+<li>
+<p><a href="https://www.qemu.org/download/#windows">QEMU</a></p>
+</li>
+</ul>
+<h2 id="从arm安装一个工具链可选的步骤-在ubuntu-1804上测试过"><a class="header" href="#从arm安装一个工具链可选的步骤-在ubuntu-1804上测试过">从ARM安装一个工具链(可选的步骤) (在Ubuntu 18.04上测试过)</a></h2>
+<ul>
+<li>2018年之后，对于Cortex-M微控制器<a href="https://rust-embedded.github.io/blog/2018-08-2x-psa-cortex-m-breakage/">GCC的链接器换成了LLD</a>，<a href="https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads">gcc-arm-none-eabi</a> 不再需要了。但是对于那些想使用这个工具链的人，可以从<a href="https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads">这里</a>安装并按照下面的步骤设置:</li>
+</ul>
+<pre><code class="language-console">$ tar xvjf gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+$ mv gcc-arm-none-eabi-&lt;version_downloaded&gt; &lt;your_desired_path&gt; # 可选
+$ export PATH=${PATH}:&lt;path_to_arm_none_eabi_folder&gt;/bin # 把这行添加到 .bashrc 使它永久有效
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="最简的-no_std-程序"><a class="header" href="#最简的-no_std-程序">最简的 <code>#![no_std]</code> 程序</a></h1>
+<p>在这部分，我们将写一个可以<em>编译</em>的最简的 <code>#![no_std]</code> 程序。</p>
+<h2 id="no_std-是什么意思"><a class="header" href="#no_std-是什么意思"><code>#![no_std]</code> 是什么意思?</a></h2>
+<p><code>#![no_std]</code> 是一个crate层级的属性，其指出crate将链接到 <a href="https://doc.rust-lang.org/core/"><code>core</code></a> 而不是 <a href="https://doc.rust-lang.org/std/"><code>std</code></a> crate，然而这对应用来说意味着什么呢?</p>
+<p><code>std</code> crate 是Rust的标准库。它包含的功能需要假设程序将运行在一个操作系统上而不是[<em>直接运行在裸机</em>]上。<code>std</code> 也假设操作系统是一个通用的操作系统，像那些会在服务器和桌面看到的系统。如此，<code>std</code> 在那些经常能在操作系统中遇到的功能：线程，文件，套接字，一个文件系统，进程，等等之上，提供了一个标准的API 。</p>
+<p>换句话说，<code>core</code> crate是<code>std</code> crate的一个子集，其不对将运行程序的系统做任何假设。它提供与语言的基本类型，像是浮点数，字符串和切片有关的APIs，也提供像是原子操作和SIMD指令这样的与处理器相关的APIs 。然而它缺少涉及到堆内存分配和I/O有关的APIs。</p>
+<p>对于一个应用来说，<code>std</code> 不仅仅只是提供一种方法访问OS抽象。<code>std</code> 在某些情况下，也提供栈溢出保护，处理命令行参数，在一个程序的<code>main</code>函数被启动前打开主线程。一个 <code>#![no_std]</code> 应用缺少上述的所有运行时，因此应用必须在需要的时候初始化它自己的运行时。</p>
+<p>由于这些特点，一个 <code>#![no_std]</code> 应用可以成为第一个或者是唯一一个运行在一个系统上的代码。它可以成为许多标准Rust应用无法成为的东西，比如:</p>
+<ul>
+<li>一个操作系统的内核。</li>
+<li>固件。</li>
+<li>一个启动引导。</li>
+</ul>
+<h2 id="代码"><a class="header" href="#代码">代码</a></h2>
+<p>讲完了，我们可以转向最小的 <code>#![no_std]</code> 程序了:</p>
+<pre><code class="language-console">$ cargo new --edition 2018 --bin app
+
+$ cd app
+</code></pre>
+<pre><code class="language-console">$ # 把 main.rs 改成这些内容
+$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_main]
+#![no_std]
+
+<span class="boring">fn main() {
+</span>use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(_panic: &amp;PanicInfo&lt;'_&gt;) -&gt; ! {
+    loop {}
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这个程序含有一些在标准的Rust程序中不会出现的东西:</p>
+<p><code>#![no_std]</code> 属性，我们已经讲过了。</p>
+<p><code>#![no_main]</code> 属性，它意味着程序将不会使用标准的 <code>main</code> 函数作为入口。在写这本书的时候，Rust的 <code>main</code> 接口对程序执行的环境做了一些假设: 比如，它假设存在命令行参数，因此，通常它不适合 <code>#![no_std]</code> 程序。 </p>
+<p><code>#[panic_handler]</code> 属性。用这个属性标记的函数定义了恐慌的行为，包括库层级的恐慌(<code>core::painc!</code>)和语言层级的恐慌(越界索引)。</p>
+<p>这个程序不产生任何有用的东西。事实上，它将产生一个空的二进制项。</p>
+<pre><code class="language-console">$ # 等于 `size target/thumbv7m-none-eabi/debug/app`
+$ cargo size --target thumbv7m-none-eabi --bin app
+</code></pre>
+<pre><code class="language-text">   text	   data	    bss	    dec	    hex	filename
+      0	      0	      0	      0	      0	app
+</code></pre>
+<p>在链接之前，crate 包含了恐慌函数的符号。</p>
+<pre><code class="language-console">$ cargo rustc --target thumbv7m-none-eabi -- --emit=obj
+
+$ cargo nm -- target/thumbv7m-none-eabi/debug/deps/app-*.o | grep '[0-9]* [^N] '
+</code></pre>
+<pre><code class="language-text">00000000 T rust_begin_unwind
+</code></pre>
+<p>不过，它是我们的起点。在下一个部分，我们将搭建一些有用的东西。但是在继续之前，让我们设置一个默认的编译目标避免每次调用Cargo不得不传递<code>--target</code>标志。</p>
+<pre><code class="language-console">$ mkdir .cargo
+
+$ # 把 .cargo/config 改成这些内容
+$ cat .cargo/config
+</code></pre>
+<pre><code class="language-toml">[build]
+target = &quot;thumbv7m-none-eabi&quot;
+</code></pre>
+<h2 id="eh_personality"><a class="header" href="#eh_personality">eh_personality</a></h2>
+<p>如果你配置的不是在恐慌时无条件终止(译者注：<code>panic = &quot;abort&quot;</code>)，大多数的有完整的操作系统的目标平台都不是(或者如果你的 <a href="./custom-target.html">客制目标平台</a> 不包含
+<code>&quot;panic-strategy&quot;: &quot;abort&quot;</code>)，那么你必须告诉Cargo要怎么做或者添加一个 <code>eh_personality</code> 函数，后者需要nightly版的编译器。<a href="https://doc.rust-lang.org/unstable-book/language-features/lang-items.html#more-about-the-language-items">这里是关于它的Rust文档</a>，
+<a href="https://www.reddit.com/r/rust/comments/estvau/til_why_the_eh_personality_language_item_is/">这里是一些关于它的讨论</a>.</p>
+<p>在 Cargo.toml 中， 添加:</p>
+<pre><code class="language-toml">[profile.dev]
+panic = &quot;abort&quot;
+
+[profile.release]
+panic = &quot;abort&quot;
+</code></pre>
+<p>或者，声明 <code>eh_personality</code> 函数。它很简单的没啥特别的，展开时和下面一样:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![feature(lang_items)]
+
+<span class="boring">fn main() {
+</span>#[lang = &quot;eh_personality&quot;]
+extern &quot;C&quot; fn eh_personality() {}
+<span class="boring">}</span></code></pre></pre>
+<p>如果没有这么做，你将会收到这个错误 <code>language item required, but not found: 'eh_personality'</code> 。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="存储布局"><a class="header" href="#存储布局">存储布局</a></h1>
+<p>下一步是确保程序有正确的存储布局，目标平台才可以执行它。在我们的例子里，将使用一个虚拟的Cortex-M3微控制器：<a href="http://www.ti.com/product/LM3S6965">LM3S6965</a> 。我们的程序是运行在设备上的唯一一个进程，因此它必须要负责初始化设备。</p>
+<h2 id="背景信息"><a class="header" href="#背景信息">背景信息</a></h2>
+<p>Cortex-M 设备需要把<a href="https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/exception-model/vector-table">向量表</a>放在<a href="https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/memory-model">代码区</a>的开始处。
+向量表是一组指针；启动设备需要前两个指针，剩下来的指针都与异常有关。我们现在忽略它们。</p>
+<p>链接器决定程序的最终存储布局，但是我们可以用<a href="https://sourceware.org/binutils/docs/ld/Scripts.html">链接器脚本</a>对它进行一些控制。链接器提供的控制布局的精细度在<em>sections</em>层级。一个section是存储在连续的内存地址中的<em>符号</em>的集合。符号，依次，可以是数据(一个静态变量)，或者指令(一个Rust函数)。</p>
+<p>每一个符号有一个由编译器分配的名字。自Rust 1.28以来，Rust编译器分配给符号的名字都是这样的格式:
+<code>_ZN5krate6module8function17he1dfc17c86fe16daE</code>，其展开是 <code>krate::module::function::he1dfc17c86fe16da</code> 其中 <code>krate::module::function</code> 是函数或者变量的路径，<code>he1dfc17c86fe16da</code> 是某个哈希值。Rust编译器将把每个符号放进它自己的独有的section中；比如之前提到的符号将被放进一个名为 <code>.text._ZN5krate6module8function17he1dfc17c86fe16daE</code> 的section中。</p>
+<p>这些编译器产生的符号和section名在不同的Rust编译器发布版中不保证是不变的。然而，语言让我们可以使用这些attributes控制符号名和放置的section:</p>
+<ul>
+<li><code>#[export_name = &quot;foo&quot;]</code> 把符号名设置成 <code>foo</code> 。</li>
+<li><code>#[no_mangle]</code> 意思是: 使用函数或者变量名(不是它的全路径)作为它的符号名。
+<code>#[no_mangle] fn bar()</code> 将产生一个名为 <code>bar</code> 的符号。</li>
+<li><code>#[link_section = &quot;.bar&quot;]</code> 把符号放进一个名为 <code>.bar</code> 的section中。</li>
+</ul>
+<p>有了这些attributes，我们可以稳定一个程序的ABI，并在链接器脚本中使用它。</p>
+<h2 id="rust-部分"><a class="header" href="#rust-部分">Rust 部分</a></h2>
+<p>像上面提到的，对于Cortex-M设备，我们需要修改向量表的前两项。第一个，栈指针的初始值，只能使用链接器脚本修改。第二个，重置向量，需要在Rust代码中生成并使用链接器脚本放置到正确的地方。</p>
+<p>重置向量是一个指向重置处理函数的指针。重置处理函数是在一个系统重启后，或者第一次上电后，设备将会执行的函数。重置处理函数总是硬件调用栈中的第一个栈帧；从它返回是未定义的行为，因为没有其它栈帧可以给它返回。通过让它变成一个divergent function，我们可以强调这个重置处理函数从来不会返回，divergent function的签名是 <code>fn(/* .. */) -&gt; !</code> 。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[no_mangle]
+pub unsafe extern &quot;C&quot; fn Reset() -&gt; ! {
+    let _x = 42;
+
+    // can't return so we go into an infinite loop here
+    loop {}
+}
+
+// The reset vector, a pointer into the reset handler
+#[link_section = &quot;.vector_table.reset_vector&quot;]
+#[no_mangle]
+pub static RESET_VECTOR: unsafe extern &quot;C&quot; fn() -&gt; ! = Reset;
+
+<span class="boring">}</span></code></pre></pre>
+<p>我们通过使用 <code>extern &quot;C&quot;</code> 告诉编译器下面的函数使用C的ABI，而不是Rust的ABI，后者不稳定，将函数变成硬件期望的格式。</p>
+<p>为了从链接器脚本中指出重置处理函数和重置向量，我们需要它们有一个稳定的符号名因此我们使用 <code>#[no_mangle]</code> 。我们需要稍微控制下 <code>RESET_VECTOR</code> 的位置，因此我们将它放进一个已知的section中，<code>.vector_table.reset_vector</code> 。重置处理函数，<code>Reset</code> ，的确切位置不重要。我们只使用编译器默认生成的section 。</p>
+<p>当遍历输入目标文件的列表时，这个链接器将忽略是内部链接的符号(也叫内部符号)，因此我们需要让我们的符号变成外部链接。在Rust中让一个符号变成外部的方法，只有使它的相关项变成公共的(<code>pub</code>)和<em>可到达的</em>(在项和crate的根路径间没有私有模块)。</p>
+<h2 id="链接器脚本部分"><a class="header" href="#链接器脚本部分">链接器脚本部分</a></h2>
+<p>一个最小的，将向量表放进正确的位置的链接器脚本如下所示。让我们仔细看看。</p>
+<pre><code class="language-console">$ cat link.x
+</code></pre>
+<pre><code class="language-text">/* Memory layout of the LM3S6965 microcontroller */
+/* 1K = 1 KiBi = 1024 bytes */
+MEMORY
+{
+  FLASH : ORIGIN = 0x00000000, LENGTH = 256K
+  RAM : ORIGIN = 0x20000000, LENGTH = 64K
+}
+
+/* The entry point is the reset handler */
+ENTRY(Reset);
+
+EXTERN(RESET_VECTOR);
+
+SECTIONS
+{
+  .vector_table ORIGIN(FLASH) :
+  {
+    /* First entry: initial Stack Pointer value */
+    LONG(ORIGIN(RAM) + LENGTH(RAM));
+
+    /* Second entry: reset vector */
+    KEEP(*(.vector_table.reset_vector));
+  } &gt; FLASH
+
+  .text :
+  {
+    *(.text .text.*);
+  } &gt; FLASH
+
+  /DISCARD/ :
+  {
+    *(.ARM.exidx .ARM.exidx.*);
+  }
+}
+</code></pre>
+<h3 id="memory"><a class="header" href="#memory"><code>MEMORY</code></a></h3>
+<p>链接器脚本的这个部分描述了目标中存储区块的大小和位置。有两个存储区块被定义了: <code>FLASH</code> 和 <code>RAM</code> ；它们都与目标中可用的物理存储有关。这里用的值与LM3S6965微控制器有关。</p>
+<h3 id="entry"><a class="header" href="#entry"><code>ENTRY</code></a></h3>
+<p>这里我们指给链接器，符号名为 <code>Reset</code> 的重置处理函数是程序的 <em>entry point</em> 。链接器会主动丢弃未使用的部分。链接器认为entry point和从它处被调用的函数是<em>被使用了的</em>，所以链接器将不会丢弃它们。没有这一行，链接器将会丢弃 <code>Reset</code> 函数和所有它接下来会调用的函数。</p>
+<h3 id="extern"><a class="header" href="#extern"><code>EXTERN</code></a></h3>
+<p>链接器是懒惰的；一旦它们找到了从entry point处递归引用的所有的符号，它们将停止查看输入目标文件。<code>EXTERN</code> 强迫链接器去寻找 <code>EXTERN</code> 的参数，即使其它所有的被引用的符号都被找到后。因为thumb的一个规则，如果你想要一个符号，其没有被entry point调用，总是出现在输出的二进制项中，你应该使用结合了 <code>KEEP</code> 的 <code>EXTERN</code> 。</p>
+<h3 id="sections"><a class="header" href="#sections"><code>SECTIONS</code></a></h3>
+<p>这部分描述了输入目标文件中的sections(也被称为<em>input sections</em>)要如何被安排进输出目标文件的sections(也被称为output sections)中的或者它们是否应该被丢弃。这里，我们定义两个输出sections:</p>
+<pre><code class="language-text">  .vector_table ORIGIN(FLASH) : { /* .. */ } &gt; FLASH
+</code></pre>
+<p><code>.vector_table</code> 包含向量表且坐落于 <code>FLASH</code> 存储的开始处。</p>
+<pre><code class="language-text">  .text : { /* .. */ } &gt; FLASH
+</code></pre>
+<p><code>.text</code> 包含程序的子程序且坐落于 <code>FLASH</code> 的某些位置。它的开始地址没有指定，但是链接器将把它放在先前的输出section，<code>.vector_table</code> 之后。</p>
+<p>输出 <code>.vector_table</code> section包含:</p>
+<pre><code class="language-text">    /* First entry: initial Stack Pointer value */
+    LONG(ORIGIN(RAM) + LENGTH(RAM));
+</code></pre>
+<p>我们将把(调用)栈放在RAM的末尾(栈是<em>完全递减的</em>；它向着更小的地址增长)因此RAM的末尾地址将被用作栈指针(SP)值。链接器使用我们输入的<code>RAM</code>存储区块的信息，可以算出那个地址。</p>
+<pre><code>    /* Second entry: reset vector */
+    KEEP(*(.vector_table.reset_vector));
+</code></pre>
+<p>接下来，我们使用 <code>KEEP</code> 去强迫链接器在初始的SP值之后插入所有的名为 <code>.vector_table.reset_vector</code> 的input sections 。位于那个section中的唯一一个符号是 <code>RESET_VECTOR</code>，所以这将可以把 <code>RESEET_VECTOR</code> 放在向量表的第二个位置。</p>
+<p>输出的 <code>.text</code> section 包含:</p>
+<pre><code class="language-text">    *(.text .text.*);
+</code></pre>
+<p>这包括所有的名为 <code>.text</code> 和 <code>.text.*</code> 的input sections 。注意我们这里没有使用 <code>KEEP</code> 去让链接器丢弃不使用的部分。</p>
+<p>最后，我们使用特殊的 <code>/DISCARD/</code> section 去丢弃</p>
+<pre><code class="language-text">    *(.ARM.exidx .ARM.exidx.*);
+</code></pre>
+<p>名为 <code>.ARM.exidx.*</code> 的input sections 。这些sections与异常处理有关，但是我们在恐慌时不进行栈展开，它们占用Flash的存储空间，因此我们就丢弃它们。</p>
+<h2 id="全放到一起去"><a class="header" href="#全放到一起去">全放到一起去</a></h2>
+<p>现在我们能链接应用了。作为参考，这里是完整的Rust程序:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_main]
+#![no_std]
+
+<span class="boring">fn main() {
+</span>use core::panic::PanicInfo;
+
+// The reset handler
+#[no_mangle]
+pub unsafe extern &quot;C&quot; fn Reset() -&gt; ! {
+    let _x = 42;
+
+    // can't return so we go into an infinite loop here
+    loop {}
+}
+
+// The reset vector, a pointer into the reset handler
+#[link_section = &quot;.vector_table.reset_vector&quot;]
+#[no_mangle]
+pub static RESET_VECTOR: unsafe extern &quot;C&quot; fn() -&gt; ! = Reset;
+
+#[panic_handler]
+fn panic(_panic: &amp;PanicInfo&lt;'_&gt;) -&gt; ! {
+    loop {}
+}
+<span class="boring">}</span></code></pre></pre>
+<p>我们不得不修改链接的过程让它使用我们的链接器脚本。通过传递 <code>-C link-arg</code> 标志给 <code>rustc</code> 来完成它。使用 <code>cargo-rustc</code> 或者 <code>cargo-build</code> 就可以完成了。</p>
+<p><strong>重要</strong>: 在运行这个命令之前确保你有 <code>.cargo/config</code> 文件，其在上个章节末尾处被添加了。</p>
+<p>使用 <code>cargo-rustc</code> 子命令:</p>
+<pre><code class="language-console">$ cargo rustc -- -C link-arg=-Tlink.x
+</code></pre>
+<p>或者你可以在 <code>.cargo/config</code> 中设置rustflags，并继续使用 <code>cargo-build</code> 子命令。我们将会使用后者因为它与<code>cargo-binutils</code>集成的更好。</p>
+<pre><code class="language-console"># 将 .cargo/config 修改成这些内容
+$ cat .cargo/config
+</code></pre>
+<pre><code class="language-toml">[target.thumbv7m-none-eabi]
+rustflags = [&quot;-C&quot;, &quot;link-arg=-Tlink.x&quot;]
+
+[build]
+target = &quot;thumbv7m-none-eabi&quot;
+</code></pre>
+<p><code>[target.thumbv7m-none-eabi]</code> 部分告知这些标志只会被用于当交叉编译的目标是<code>thumbv7m-none-eabi</code>时。</p>
+<h2 id="检查它"><a class="header" href="#检查它">检查它</a></h2>
+<p>现在让我们检查下输出的二进制项，确保存储布局跟我们想要的一样
+(这需要 <a href="https://github.com/rust-embedded/cargo-binutils#readme"><code>cargo-binutils</code></a>):</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -d --no-show-raw-insn
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+&lt;Reset&gt;:
+               	sub	sp, #0x4
+               	movs	r0, #0x2a
+               	str	r0, [sp]
+               	b	0x10 &lt;Reset+0x8&gt;        @ imm = #-0x2
+               	b	0x10 &lt;Reset+0x8&gt;        @ imm = #-0x4
+</code></pre>
+<p>这是 <code>.text</code> section的反汇编。我们看到重置处理函数，名为 <code>Reset</code>，位于 <code>0x8</code> 地址。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -s --section .vector_table
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+Contents of section .vector_table:
+ 0000 00000120 09000000                    ... ....
+</code></pre>
+<p>这是 <code>.vector_table</code> section 的内容。我们可以看到section开始于地址 <code>0x0</code> 且 section 的第一个字是 <code>0x2001_0000</code> (<code>objdump</code> 的输出是小端模式)。这是初始的SP值，它与RAM的末尾地址匹配。第二个字是 <code>0x9</code>；这是重置处理函数的 <em>thumb mode</em> 的地址。当一个函数运行在thumb mode下，它的地址的第一位被设置成1 。</p>
+<h2 id="测试它"><a class="header" href="#测试它">测试它</a></h2>
+<p>这个程序是一个有效的LM3S6965程序；我们可以在一个虚拟微控制器(QEMU)中执行它去测试。</p>
+<pre><code class="language-console">$ # 这个程序将会阻塞住
+$ qemu-system-arm \
+      -cpu cortex-m3 \
+      -machine lm3s6965evb \
+      -gdb tcp::3333 \
+      -S \
+      -nographic \
+      -kernel target/thumbv7m-none-eabi/debug/app
+</code></pre>
+<pre><code class="language-console">$ # 在一个不同的终端上
+$ arm-none-eabi-gdb -q target/thumbv7m-none-eabi/debug/app
+Reading symbols from target/thumbv7m-none-eabi/debug/app...done.
+
+(gdb) target remote :3333
+Remote debugging using :3333
+Reset () at src/main.rs:8
+8       pub unsafe extern &quot;C&quot; fn Reset() -&gt; ! {
+
+(gdb) # the SP has the initial value we programmed in the vector table
+(gdb) print/x $sp
+$1 = 0x20010000
+
+(gdb) step
+9           let _x = 42;
+
+(gdb) step
+12          loop {}
+
+(gdb) # next we inspect the stack variable `_x`
+(gdb) print _x
+$2 = 42
+
+(gdb) print &amp;_x
+$3 = (i32 *) 0x2000fffc
+
+(gdb) quit
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="一个-main-接口"><a class="header" href="#一个-main-接口">一个 <code>main</code> 接口</a></h1>
+<p>我们现在有了一个可以工作的最简的程序了，但是我们需要用一种方式将它打包起来，让终端用户可以在其上搭建安全的程序。在这部分，我们将实现一个 <code>main</code> 接口，它用起来就像我们在一个标准的Rust程序中所用的那样。</p>
+<p>首先，我们将把我们的binary crate转换成一个library crate:</p>
+<pre><code class="language-console">$ mv src/main.rs src/lib.rs
+</code></pre>
+<p>然后把它重命名为 <code>rt</code>，其表示&quot;runtime&quot; 。</p>
+<pre><code class="language-console">$ sed -i s/app/rt/ Cargo.toml
+
+$ head -n4 Cargo.toml
+</code></pre>
+<pre><code class="language-toml">[package]
+edition = &quot;2018&quot;
+name = &quot;rt&quot; # &lt;-
+version = &quot;0.1.0&quot;
+</code></pre>
+<p>第一个改变是让重置处理函数调用一个外部的 <code>main</code> 函数:</p>
+<pre><code class="language-console">$ head -n13 src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_std]
+
+use core::panic::PanicInfo;
+
+// CHANGED!
+#[no_mangle]
+pub unsafe extern &quot;C&quot; fn Reset() -&gt; ! {
+    extern &quot;Rust&quot; {
+        fn main() -&gt; !;
+    }
+
+    main()
+}</code></pre></pre>
+<p>我们也去掉了 <code>#![no_main]</code> attribute，因为它对library crates没有影响。</p>
+<blockquote>
+<p>到了这里出现了一个正交问题：<code>rt</code>库应该提供一个标准的恐慌时行为吗，
+或者它不应该提供一个 <code>#[panic_handler]</code> 函数而让终端用户去选
+择恐慌时行为吗？这个文档将不会深入这个问题，而且为了方便，在<code>rt</code> crate
+中留了一个空的 <code>#[panic_handler]</code> 函数。然而，我们想告诉读者还存在其它选择。</p>
+</blockquote>
+<p>第二个改变涉及到给应用crate提供我们之前写的链接器脚本。链接器将会在库搜索路径(<code>-L</code>)和调用它的文件夹中寻找链接器脚本。应用crate不应该需要将<code>link.x</code>的副本挪来挪去所以我们将使用一个<a href="https://doc.rust-lang.org/cargo/reference/build-scripts.html">build script</a>让 <code>rt</code> crate 将链接器脚本放到库搜索路径中。</p>
+<pre><code class="language-console">$ # 在`rt`的根目录中生成一个带有这些内容的 build.rs 文件
+$ cat build.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">use std::{env, error::Error, fs::File, io::Write, path::PathBuf};
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    // build directory for this crate
+    let out_dir = PathBuf::from(env::var_os(&quot;OUT_DIR&quot;).unwrap());
+
+    // extend the library search path
+    println!(&quot;cargo:rustc-link-search={}&quot;, out_dir.display());
+
+    // put `link.x` in the build directory
+    File::create(out_dir.join(&quot;link.x&quot;))?.write_all(include_bytes!(&quot;link.x&quot;))?;
+
+    Ok(())
+}</code></pre></pre>
+<p>现在用户可以写一个暴露了<code>main</code>符号的应用了，且将它链接到<code>rt</code> crate上。<code>rt</code> 将负责给予程序正确的存储布局。</p>
+<pre><code class="language-console">$ cd ..
+
+$ cargo new --edition 2018 --bin app
+
+$ cd app
+
+$ # 修改Cargo.toml将`rt` crate包含进来作为一个依赖
+$ tail -n2 Cargo.toml
+</code></pre>
+<pre><code class="language-toml">[dependencies]
+rt = { path = &quot;../rt&quot; }
+</code></pre>
+<pre><code class="language-console">$ # 拷贝整个config文件，它设置了一个默认的目标并修改了链接器命令
+$ cp -r ../rt/.cargo .
+
+$ # 把 `main.rs` 的内容改成
+$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_std]
+#![no_main]
+
+extern crate rt;
+
+#[no_mangle]
+pub fn main() -&gt; ! {
+    let _x = 42;
+
+    loop {}
+}</code></pre></pre>
+<p>反汇编的结果将是相似的，除了现在包含了用户的<code>main</code>函数。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -d --no-show-raw-insn
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+&lt;main&gt;:
+               	sub	sp, #0x4
+               	movs	r0, #0x2a
+               	str	r0, [sp]
+               	b	0x10 &lt;main+0x8&gt;         @ imm = #-0x2
+               	b	0x10 &lt;main+0x8&gt;         @ imm = #-0x4
+
+&lt;Reset&gt;:
+               	push	{r7, lr}
+               	mov	r7, sp
+               	bl	0x8 &lt;main&gt;              @ imm = #-0x12
+               	trap
+</code></pre>
+<h2 id="把它变成类型安全的"><a class="header" href="#把它变成类型安全的">把它变成类型安全的</a></h2>
+<p><code>main</code> 接口工作了，但是它容易出错。比如，用户可以把<code>main</code>写成一个non-divergent function，它们将不会带来编译时错误，但会带来未定义的行为(编译器将会错误优化这个程序)。</p>
+<p>我们通过暴露一个宏给用户而不是符号接口可以添加类型安全性。在 <code>rt</code> crate 中，我们可以写这个宏:</p>
+<pre><code class="language-console">$ tail -n12 ../rt/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[macro_export]
+macro_rules! entry {
+    ($path:path) =&gt; {
+        #[export_name = &quot;main&quot;]
+        pub unsafe fn __main() -&gt; ! {
+            // type check the given path
+            let f: fn() -&gt; ! = $path;
+
+            f()
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>然后应用的作者可以像这样调用它:</p>
+<pre><code class="language-console">$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_std]
+#![no_main]
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let _x = 42;
+
+    loop {}
+}</code></pre></pre>
+<p>如果作者把<code>main</code>的签名改成non divergent function，比如 <code>fn</code> ，将会出现一个错误。</p>
+<h2 id="main之前的工作"><a class="header" href="#main之前的工作">main之前的工作</a></h2>
+<p><code>rt</code> 看起来不错了，但是它的功能不够完整！用它编写的应用不能使用 <code>static</code> 变量或者字符串字面值，因为 <code>rt</code> 的链接器脚本没有定义标准的<code>.bss</code>，<code>.data</code> 和 <code>.rodata</code> sections 。让我们修复它！</p>
+<p>第一步是在链接器脚本中定义这些sections:</p>
+<pre><code class="language-console">$ # 只展示文件的一小块
+$ sed -n 25,46p ../rt/link.x
+</code></pre>
+<pre><code class="language-text">  .text :
+  {
+    *(.text .text.*);
+  } &gt; FLASH
+
+  /* NEW! */
+  .rodata :
+  {
+    *(.rodata .rodata.*);
+  } &gt; FLASH
+
+  .bss :
+  {
+    *(.bss .bss.*);
+  } &gt; RAM
+
+  .data :
+  {
+    *(.data .data.*);
+  } &gt; RAM
+
+  /DISCARD/ :
+</code></pre>
+<p>它们只是重新导出input sections并指定每个output section将会进入哪个内存区域。</p>
+<p>有了这些改变，下面的程序可以编译:</p>
+<pre><pre class="playground"><code class="language-rust">#![no_std]
+#![no_main]
+
+use rt::entry;
+
+entry!(main);
+
+static RODATA: &amp;[u8] = b&quot;Hello, world!&quot;;
+static mut BSS: u8 = 0;
+static mut DATA: u16 = 1;
+
+fn main() -&gt; ! {
+    let _x = RODATA;
+    let _y = unsafe { &amp;BSS };
+    let _z = unsafe { &amp;DATA };
+
+    loop {}
+}</code></pre></pre>
+<p>然而如果你在真正的硬件上运行这个程序并调试它，你将发现到达<code>main</code>时，<code>static</code> 变量 <code>BSS</code> 和 <code>DATA</code> 没有 <code>0</code> 和 <code>1</code> 值。反而，这些变量将是垃圾值。问题是在设备上电之后，RAM的内容是随机的。如果你在QEMU中运行这个程序，你将看不到这个影响。</p>
+<p>在目前的情况下，如果你的程序在对<code>static</code>变量执行一个写入之前，读取任何 <code>static</code> 变量，那么你的程序会出现未定义的行为。让我们通过在调用<code>main</code>之前初始化所有的<code>static</code>变量来修复它。</p>
+<p>我们需要修改下链接器脚本去进行RAM初始化:</p>
+<pre><code class="language-console">$ # 只展示文件的一块
+$ sed -n 25,52p ../rt/link.x
+</code></pre>
+<pre><code class="language-text">  .text :
+  {
+    *(.text .text.*);
+  } &gt; FLASH
+
+  /* CHANGED! */
+  .rodata :
+  {
+    *(.rodata .rodata.*);
+  } &gt; FLASH
+
+  .bss :
+  {
+    _sbss = .;
+    *(.bss .bss.*);
+    _ebss = .;
+  } &gt; RAM
+
+  .data : AT(ADDR(.rodata) + SIZEOF(.rodata))
+  {
+    _sdata = .;
+    *(.data .data.*);
+    _edata = .;
+  } &gt; RAM
+
+  _sidata = LOADADDR(.data);
+
+  /DISCARD/ :
+</code></pre>
+<p>让我们深入下细节:</p>
+<pre><code class="language-text">    _sbss = .;
+</code></pre>
+<pre><code class="language-text">    _ebss = .;
+</code></pre>
+<pre><code class="language-text">    _sdata = .;
+</code></pre>
+<pre><code class="language-text">    _edata = .;
+</code></pre>
+<p>我们将符号关联到<code>.bss</code>和<code>.data</code> sections的开始和末尾地址，我之后将会从Rust代码中使用。</p>
+<pre><code class="language-text">  .data : AT(ADDR(.rodata) + SIZEOF(.rodata))
+</code></pre>
+<p>我们将<code>.data</code> section的加载内存地址(LMA)设置成<code>.rodata</code> section的末尾处。<code>.data</code> 包含非零值的<code>static</code>变量；<code>.data</code> section的虚拟内存地址(VMA)在RAM中的某处 -- 这是<code>static</code>变量所在的地方。这些<code>static</code>变量的初始值，然而，必须被分配在非易失存储中(Flash)；LMA是Flash中存放这些初始值的地方。</p>
+<pre><code class="language-text">  _sidata = LOADADDR(.data);
+</code></pre>
+<p>最后，我们将一个符号和<code>.data</code>的LMA关联起来。我们可以从Rust代码引用我们在链接器脚本中生成的符号。这些符号的<em>地址</em><sup class="footnote-reference"><a href="#1">1</a></sup>指向 <code>.bss</code> 和 <code>.data</code> sections的边界处。</p>
+<p>下面展示的是更新了的重置处理函数:</p>
+<pre><code class="language-console">$ head -n32 ../rt/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_std]
+
+use core::panic::PanicInfo;
+use core::ptr;
+
+#[no_mangle]
+pub unsafe extern &quot;C&quot; fn Reset() -&gt; ! {
+    // NEW!
+    // Initialize RAM
+    extern &quot;C&quot; {
+        static mut _sbss: u8;
+        static mut _ebss: u8;
+
+        static mut _sdata: u8;
+        static mut _edata: u8;
+        static _sidata: u8;
+    }
+
+    let count = &amp;_ebss as *const u8 as usize - &amp;_sbss as *const u8 as usize;
+    ptr::write_bytes(&amp;mut _sbss as *mut u8, 0, count);
+
+    let count = &amp;_edata as *const u8 as usize - &amp;_sdata as *const u8 as usize;
+    ptr::copy_nonoverlapping(&amp;_sidata as *const u8, &amp;mut _sdata as *mut u8, count);
+
+    // Call user entry point
+    extern &quot;Rust&quot; {
+        fn main() -&gt; !;
+    }
+
+    main()
+}</code></pre></pre>
+<p>现在终端用户可以直接地和间接地使用<code>static</code>变量而不会导致未定义的行为了!</p>
+<blockquote>
+<p>我们上面展示的代码中，内存的初始化按照一种逐字节的方式进行。可以强迫 <code>.bss</code> 和 <code>.data</code> section对齐，比如，四个字节。然后Rust代码可以利用这个事实去执行逐字的初始化而不需要对齐检查。如果你想知道这是如何做到的，看下 <a href="https://github.com/japaric/cortex-m-rt/tree/v0.5.1"><code>cortex-m-rt</code></a> crate 。</p>
+</blockquote>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>必须在这使用链接器脚本符号这件事会让人疑惑且反直觉。可以在<a href="https://stackoverflow.com/a/40392131">这里</a>找到与这个怪现象有关的详尽解释。</p>
+</div>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="异常处理"><a class="header" href="#异常处理">异常处理</a></h1>
+<p>在&quot;存储布局&quot;部分，我们刚开始的时候决定说得简单点，所以忽略了对异常的处理。在这部分，我们将添加对异常处理的支持；这将作为一个如何在稳定版的Rust中(比如 不依赖不稳定的 <code>#[linkage = &quot;weak&quot;]</code> 属性，它让一个符号变成弱链接)实现编译时可重载行为的案例。</p>
+<h2 id="背景信息-1"><a class="header" href="#背景信息-1">背景信息</a></h2>
+<p>简而言之，<em>异常</em>是Cortex-M和其它架构为了让应用可以响应异步的，通常是外部的，事件，所提供的一种机制。经典的(硬件)中断是大多数人所知道的最常见的异常类型。</p>
+<p>Cortex-M异常机制工作起来像下面一样:
+当处理器接收到与某个异常的类型相关的信号或者事件，它挂起现在的子程序的执行(通过将状态存进调用栈中)然后在一个新的栈帧中继续执行相关的异常处理函数，也就是另一个子程序。在异常处理函数执行完成之后(比如 从它返回后)，处理器恢复被挂起的子程序的执行。</p>
+<p>处理器使用向量表去确定执行哪个处理函数。表中的每一项包含一个指向一个处理函数的指针，每一项关联的异常类型都不一样。比如，第二项是重置处理函数，第三项是NMI(不可屏蔽中断)处理函数，等等。</p>
+<p>像之前提到的，处理器希望向量表在存储中的某个特定的位置，在运行时处理器可能用到表中的每一项。因此，表中的各项必须包含有效的值。此外，我们希望<code>rt</code> crate是灵活的，因此终端用户可以定制每个异常处理函数的行为。最后，向量表要坐落在只读存储中，或者在不容易被修改的存储中，因此用户必须静态地注册处理函数，而不是在运行时。</p>
+<p>为了满足所有的这些需求，我们将给<code>rt</code> crate中的向量表所有的项分配一个<em>默认值</em>，但是让这些值变<em>弱</em>以让终端用户可以在编译时重载它们。</p>
+<h2 id="rust部分"><a class="header" href="#rust部分">Rust部分</a></h2>
+<p>让我们看下所有的这些要如何被实现。为了方便，我们将只使用向量表的前16个项；这些项不是特定于设备的，所以它们在所有类型的Cotex-M微控制器上都有相同的作用。</p>
+<p>我们做的第一件事是在<code>rt</code> create的代码中创造一个向量(指向异常处理函数的指针)数组:</p>
+<pre><code class="language-console">$ sed -n 56,91p ../rt/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub union Vector {
+    reserved: u32,
+    handler: unsafe extern &quot;C&quot; fn(),
+}
+
+extern &quot;C&quot; {
+    fn NMI();
+    fn HardFault();
+    fn MemManage();
+    fn BusFault();
+    fn UsageFault();
+    fn SVCall();
+    fn PendSV();
+    fn SysTick();
+}
+
+#[link_section = &quot;.vector_table.exceptions&quot;]
+#[no_mangle]
+pub static EXCEPTIONS: [Vector; 14] = [
+    Vector { handler: NMI },
+    Vector { handler: HardFault },
+    Vector { handler: MemManage },
+    Vector { handler: BusFault },
+    Vector {
+        handler: UsageFault,
+    },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { handler: SVCall },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { handler: PendSV },
+    Vector { handler: SysTick },
+];
+<span class="boring">}</span></code></pre></pre>
+<p>向量表中的一些项是<em>保留的</em>；ARM文档说它们应该被分配成 <code>0</code> 值，所以我们使用一个联合体来完成它。需要指向一个处理函数的项必须使用<em>external</em>函数；这很重要，因为它可以让终端用户来<em>提供</em>实际的函数定义。</p>
+<p>接下来，我们在Rust代码中定义一个默认的异常处理函数。没有被终端用户分配的异常将使用这个默认处理函数。</p>
+<pre><code class="language-console">$ tail -n4 ../rt/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[no_mangle]
+pub extern &quot;C&quot; fn DefaultExceptionHandler() {
+    loop {}
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="链接器脚本部分-1"><a class="header" href="#链接器脚本部分-1">链接器脚本部分</a></h2>
+<p>在链接器脚本那部分，我们将这些新的异常向量放在重置向量之后。</p>
+<pre><code class="language-console">$ sed -n 12,25p ../rt/link.x
+</code></pre>
+<pre><code class="language-text">EXTERN(RESET_VECTOR);
+EXTERN(EXCEPTIONS); /* &lt;- NEW */
+
+SECTIONS
+{
+  .vector_table ORIGIN(FLASH) :
+  {
+    /* First entry: initial Stack Pointer value */
+    LONG(ORIGIN(RAM) + LENGTH(RAM));
+
+    /* Second entry: reset vector */
+    KEEP(*(.vector_table.reset_vector));
+
+    /* The next 14 entries are exception vectors */
+    KEEP(*(.vector_table.exceptions)); /* &lt;- NEW */
+  } &gt; FLASH
+</code></pre>
+<p>并且我们使用 <code>PROVIDE</code> 给我们在<code>rt</code>中未定义的处理函数赋予一个默认值 (<code>NMI</code>和上面的其它处理函数):</p>
+<pre><code class="language-console">$ tail -n8 ../rt/link.x
+</code></pre>
+<pre><code class="language-text">PROVIDE(NMI = DefaultExceptionHandler);
+PROVIDE(HardFault = DefaultExceptionHandler);
+PROVIDE(MemManage = DefaultExceptionHandler);
+PROVIDE(BusFault = DefaultExceptionHandler);
+PROVIDE(UsageFault = DefaultExceptionHandler);
+PROVIDE(SVCall = DefaultExceptionHandler);
+PROVIDE(PendSV = DefaultExceptionHandler);
+PROVIDE(SysTick = DefaultExceptionHandler);
+</code></pre>
+<p>当检测完所有的输入目标文件而等号左侧的符号仍然没有定义的时候，<code>PROVIDE</code> 才会发挥作用。也就是用户没有为相关的异常实现处理函数时。</p>
+<h2 id="测试它-1"><a class="header" href="#测试它-1">测试它</a></h2>
+<p>这就完了！<code>rt</code> crate现在支持异常处理函数了。我们可以用下列的应用测试它:</p>
+<blockquote>
+<p><strong>注意</strong>: 在QEMU中生成一个异常很难。在实际的硬件上对一个无效的存储地址进行
+一个读取是足够产生一个中断的，但是QEMU却能接受这个操作并且返回零。一个陷入指
+令在QEMU和硬件上都可以发挥中断的作用，但是不幸的是在稳定版上不可以用它，所以你需要
+暂时切换到nightly版本中去运行这个和下个案例。</p>
+</blockquote>
+<pre><pre class="playground"><code class="language-rust">#![feature(core_intrinsics)]
+#![no_main]
+#![no_std]
+
+use core::intrinsics;
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    // this executes the undefined instruction (UDF) and causes a HardFault exception
+    intrinsics::abort()
+}</code></pre></pre>
+<pre><code class="language-console">(gdb) target remote :3333
+Remote debugging using :3333
+Reset () at ../rt/src/lib.rs:7
+7       pub unsafe extern &quot;C&quot; fn Reset() -&gt; ! {
+
+(gdb) b DefaultExceptionHandler
+Breakpoint 1 at 0xec: file ../rt/src/lib.rs, line 95.
+
+(gdb) continue
+Continuing.
+
+Breakpoint 1, DefaultExceptionHandler ()
+    at ../rt/src/lib.rs:95
+95          loop {}
+
+(gdb) list
+90          Vector { handler: SysTick },
+91      ];
+92
+93      #[no_mangle]
+94      pub extern &quot;C&quot; fn DefaultExceptionHandler() {
+95          loop {}
+96      }
+</code></pre>
+<p>为了完整性，这里列出程序被优化过的版本的反汇编:</p>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+&lt;main&gt;:
+               	trap
+               	trap
+
+&lt;Reset&gt;:
+               	push	{r7, lr}
+               	mov	r7, sp
+               	movw	r1, #0x0
+               	movw	r0, #0x0
+               	movt	r1, #0x2000
+               	movt	r0, #0x2000
+               	subs	r1, r1, r0
+               	bl	0x9c &lt;__aeabi_memclr&gt;   @ imm = #0x3e
+               	movw	r1, #0x0
+               	movw	r0, #0x0
+               	movt	r1, #0x2000
+               	movt	r0, #0x2000
+               	subs	r2, r1, r0
+               	movw	r1, #0x282
+               	movt	r1, #0x0
+               	bl	0x84 &lt;__aeabi_memcpy&gt;   @ imm = #0x8
+               	bl	0x40 &lt;main&gt;             @ imm = #-0x40
+               	trap
+
+&lt;UsageFault&gt;:
+</code></pre>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -s -j .vector_table
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+Contents of section .vector_table:
+ 0000 00000120 45000000 83000000 83000000  ... E...........
+ 0010 83000000 83000000 83000000 00000000  ................
+ 0020 00000000 00000000 00000000 83000000  ................
+ 0030 00000000 00000000 83000000 83000000  ................
+</code></pre>
+<p>向量表现在像是集合了这本书中迄今为止所有的代码片段。总结下:</p>
+<ul>
+<li>在早期的存储章节的<a href="https://xxchang.github.io/embedonomicon/memory-layout.html#inspecting-it"><em>检查它</em></a>部分，我们知道了:
+<ul>
+<li>向量表中第一项包含了栈指针的初始值。</li>
+<li>Objdump使用<code>小端</code>格式打印，所以栈开始于 <code>0x2001_0000</code> 。</li>
+<li>第二项指向地址 <code>0x0000_0045</code>，重置处理函数。
+<ul>
+<li>在上面的反汇编中可以看到重置处理函数的地址，是 <code>0x44</code> 。</li>
+<li>由于对齐的要求被设置成1的第一位不会改变地址。而是，它让函数在 <em>thumb mode</em> 下执行。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>之后，可以看到在<code>0x83</code>和<code>0x00</code>之间交替的地址模式。
+<ul>
+<li>看下上面的反汇编，很明显 <code>0x83</code> 指的是 <code>DefaultExceptionHandler</code> (<code>0x84</code>用thumb模式执行)。</li>
+<li>在这个章节早期所设置的向量表和<a href="https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/exception-model/vector-table">Cortex-M的向量表布局</a>的模式之间来回查看，很明显每次有个带处理函数的项出现在表中，<code>DefaultExceptionHandler</code>的地址就会出现。</li>
+<li>可以看到Rust代码中的向量表的数据结构的布局与Cortex-M向量表中的保留项依次对齐了。因此，所有的保留项被正确的设置成了零值。</li>
+</ul>
+</li>
+</ul>
+<h2 id="重载一个处理函数"><a class="header" href="#重载一个处理函数">重载一个处理函数</a></h2>
+<p>为了重载一个异常处理函数，用户必须提供一个函数，其符号名完全匹配我们在<code>EXCEPTIONS</code>中使用的名字。</p>
+<pre><pre class="playground"><code class="language-rust">#![feature(core_intrinsics)]
+#![no_main]
+#![no_std]
+
+use core::intrinsics;
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    intrinsics::abort()
+}
+
+#[no_mangle]
+pub extern &quot;C&quot; fn HardFault() -&gt; ! {
+    // do something interesting here
+    loop {}
+}</code></pre></pre>
+<p>你可以在QEMU中测试它</p>
+<pre><code class="language-console">(gdb) target remote :3333
+Remote debugging using :3333
+Reset () at /home/japaric/rust/embedonomicon/ci/exceptions/rt/src/lib.rs:7
+7       pub unsafe extern &quot;C&quot; fn Reset() -&gt; ! {
+
+(gdb) b HardFault
+Breakpoint 1 at 0x44: file src/main.rs, line 18.
+
+(gdb) continue
+Continuing.
+
+Breakpoint 1, HardFault () at src/main.rs:18
+18          loop {}
+
+(gdb) list
+13      }
+14
+15      #[no_mangle]
+16      pub extern &quot;C&quot; fn HardFault() -&gt; ! {
+17          // do something interesting here
+18          loop {}
+19      }
+</code></pre>
+<p>程序现在执行了用户定义的<code>HardFault</code>函数而不是<code>rt</code> crate中的<code>DefaultExceptionHandler</code> 。</p>
+<p>与我们在<code>main</code>接口中进行的第一次尝试一样，这个实现的问题是没有类型安全性。它也容易混淆异常的名字，但是不会生成一个错误或者警告。而仅仅是忽略用户定义的处理函数。这些问题可以使用一个像是在<code>cortex-m-rt</code> v0.5.x 中定义的<a href="https://github.com/japaric/cortex-m-rt/blob/v0.5.1/src/lib.rs#L792"><code>exception!</code></a>宏和<code>cortex-m-rt</code> v0.6.x中的<a href="https://github.com/rust-embedded/cortex-m-rt/blob/v0.6.3/macros/src/lib.rs#L254"><code>exception</code></a>属性来解决。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="稳定的汇编"><a class="header" href="#稳定的汇编">稳定的汇编</a></h1>
+<blockquote>
+<p>注意: 自Rust 1.59以来，<em>inline</em> 汇编(<code>asm!</code>)和 <em>free form</em> 汇编(<code>global_asm!</code>)
+变得稳定了。但是因为现存的crates需要花点时间来消化这种变化，而且了解我们在历史中曾用过的处理汇编的方法对我们来说也有好处，所以我们保留了这一章。</p>
+</blockquote>
+<p>到目前位置我们已经成功地引导了设备和处理中断而没使用一行汇编。这真是一个壮举！但是在某些目标架构下，可能需要一些汇编才能达成目的。也有一些操作像是上下文切换需要汇编，等等。</p>
+<p>问题是 <em>inline</em> 汇编(<code>asm!</code>) 和 <em>free form</em> 汇编(<code>global_asm!</code>)是不稳定的，没法估计它们什么时候将变得稳定，所以你不能在稳定版中使用它们。这不是一个演示，因为这里记录的是一些变通的方法。</p>
+<p>为了激发对这章的兴趣，我们将修改下<code>HardFault</code>处理函数以提供关于产生了异常的栈帧的信息。</p>
+<p>我们想要做的是:</p>
+<p>我们将让<code>rt</code> crate在向量表中放置一个可以跳向用户定义的<code>HardFault</code>的跳板，而不是让用户直接将它们的<code>HardFault</code>处理函数放在向量表中。</p>
+<pre><code class="language-console">$ tail -n36 ../rt/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>extern &quot;C&quot; {
+    fn NMI();
+    fn HardFaultTrampoline(); // &lt;- CHANGED!
+    fn MemManage();
+    fn BusFault();
+    fn UsageFault();
+    fn SVCall();
+    fn PendSV();
+    fn SysTick();
+}
+
+#[link_section = &quot;.vector_table.exceptions&quot;]
+#[no_mangle]
+pub static EXCEPTIONS: [Vector; 14] = [
+    Vector { handler: NMI },
+    Vector { handler: HardFaultTrampoline }, // &lt;- CHANGED!
+    Vector { handler: MemManage },
+    Vector { handler: BusFault },
+    Vector {
+        handler: UsageFault,
+    },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { handler: SVCall },
+    Vector { reserved: 0 },
+    Vector { reserved: 0 },
+    Vector { handler: PendSV },
+    Vector { handler: SysTick },
+];
+
+#[no_mangle]
+pub extern &quot;C&quot; fn DefaultExceptionHandler() {
+    loop {}
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这个跳板将读取栈指针并调用用户的<code>HardFault</code>处理函数。这个跳板必须要用汇编来写:</p>
+<pre><code class="language-armasm">  mrs r0, MSP
+  b HardFault
+</code></pre>
+<p>由于ARM ABI的工作原理，它将主堆栈指针(MSP)设置为 <code>HardFault</code> 函数/例程的第一个参数。这个MSP值碰巧也是一个指针，其指向被异常推进栈中的寄存器。有了这些改变，用户的 <code>HardFault</code> 处理函数的签名现在必须是 <code>fn(&amp;StackedRegisters) -&gt; !</code> 。</p>
+<h2 id="s-文件"><a class="header" href="#s-文件"><code>.s</code> 文件</a></h2>
+<p>一个使用稳定的汇编的方法是在一个外部文件中写汇编:</p>
+<pre><code class="language-console">$ cat ../rt/asm.s
+</code></pre>
+<pre><code class="language-armasm">  .section .text.HardFaultTrampoline
+  .global HardFaultTrampoline
+  .thumb_func
+HardFaultTrampoline:
+  mrs r0, MSP
+  b HardFault
+</code></pre>
+<p>并且使用<code>rt</code> crate的build script中的<code>cc</code> crate去把那个文件汇编成一个目标文件(<code>.o</code>)，然后变成一个归档文件(<code>.a</code>)。</p>
+<pre><code class="language-console">$ cat ../rt/build.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">use std::{env, error::Error, fs::File, io::Write, path::PathBuf};
+
+use cc::Build;
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    // build directory for this crate
+    let out_dir = PathBuf::from(env::var_os(&quot;OUT_DIR&quot;).unwrap());
+
+    // extend the library search path
+    println!(&quot;cargo:rustc-link-search={}&quot;, out_dir.display());
+
+    // put `link.x` in the build directory
+    File::create(out_dir.join(&quot;link.x&quot;))?.write_all(include_bytes!(&quot;link.x&quot;))?;
+
+    // assemble the `asm.s` file
+    Build::new().file(&quot;asm.s&quot;).compile(&quot;asm&quot;); // &lt;- NEW!
+
+    // rebuild if `asm.s` changed
+    println!(&quot;cargo:rerun-if-changed=asm.s&quot;); // &lt;- NEW!
+
+    Ok(())
+}</code></pre></pre>
+<pre><code class="language-console">$ tail -n2 ../rt/Cargo.toml
+</code></pre>
+<pre><code class="language-toml">[build-dependencies]
+cc = &quot;1.0.25&quot;
+</code></pre>
+<p>完成了!</p>
+<p>通过编写一个非常简单的程序我们可以确认向量表包含一个指向 <code>HardFaultTrampoline</code> 的指针。</p>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    loop {}
+}
+
+#[allow(non_snake_case)]
+#[no_mangle]
+pub fn HardFault(_ef: *const u32) -&gt; ! {
+    loop {}
+}</code></pre></pre>
+<p>这是反汇编。我们看下 <code>HardFaultTrampoline</code> 的地址。</p>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+&lt;HardFault&gt;:
+               	b	0x40 &lt;HardFault&gt;        @ imm = #-0x4
+
+&lt;main&gt;:
+               	b	0x42 &lt;main&gt;             @ imm = #-0x4
+
+&lt;Reset&gt;:
+               	push	{r7, lr}
+               	mov	r7, sp
+               	bl	0x42 &lt;main&gt;             @ imm = #-0xa
+               	trap
+
+&lt;UsageFault&gt;:
+               	b	0x4e &lt;UsageFault&gt;       @ imm = #-0x4
+
+&lt;HardFaultTrampoline&gt;:
+               	mrs	r0, msp
+               	b	0x40 &lt;HardFault&gt;        @ imm = #-0x18
+</code></pre>
+<blockquote>
+<p><strong>注意:</strong> 为了让这个反汇编更小我注释掉了RAM的初始化</p>
+</blockquote>
+<p>现在看下向量表。第四项应该是<code>HardFaultTrampoline</code>的地址加一。</p>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -s -j .vector_table
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+Contents of section .vector_table:
+ 0000 00000120 45000000 4f000000 51000000  ... E...O...Q...
+ 0010 4f000000 4f000000 4f000000 00000000  O...O...O.......
+ 0020 00000000 00000000 00000000 4f000000  ............O...
+ 0030 00000000 00000000 4f000000 4f000000  ........O...O...
+</code></pre>
+<h2 id="o--a-文件"><a class="header" href="#o--a-文件"><code>.o</code> / <code>.a</code> 文件</a></h2>
+<p>使用<code>cc</code> crate的缺点是它需要编译机器上有对应的汇编器程序。比如当目标是ARM Cortex-M时，<code>cc</code> crate使用<code>arm-none-eabi-gcc</code>作为汇编器。</p>
+<p>我们可以用<code>rt</code> crate来搬运一个预先汇编好的文件而不用在编译机器上汇编文件。这方法不需要在编译机器上拥有汇编器程序。然而，打包和发布crate的机器上仍然需要一个汇编器。</p>
+<p>一个汇编(<code>.s</code>)文件和它的<em>编译</em>版：目标(<code>.o</code>)文件之间没有太大区别。汇编器不会做任何优化；它仅仅为目标架构选择正确的目标文件格式。</p>
+<p>Cargo提供将归档文件(<code>.a</code>)和crates绑在一起的支持。使用<code>ar</code>命令我们可将目标文件打包进一个归档文件中，然后将归档文件和crate绑一起。事实上，这就是<code>cc</code> crate做的事；通过搜索一个在<code>target</code>文件夹中名为<code>output</code>的文件你可以看到<code>cc</code> crate调用的命令。</p>
+<pre><code class="language-console">$ grep running $(find target -name output)
+</code></pre>
+<pre><code class="language-text">running: &quot;arm-none-eabi-gcc&quot; &quot;-O0&quot; &quot;-ffunction-sections&quot; &quot;-fdata-sections&quot; &quot;-fPIC&quot; &quot;-g&quot; &quot;-fno-omit-frame-pointer&quot; &quot;-mthumb&quot; &quot;-march=armv7-m&quot; &quot;-Wall&quot; &quot;-Wextra&quot; &quot;-o&quot; &quot;/tmp/app/target/thumbv7m-none-eabi/debug/build/rt-6ee84e54724f2044/out/asm.o&quot; &quot;-c&quot; &quot;asm.s&quot;
+running: &quot;ar&quot; &quot;crs&quot; &quot;/tmp/app/target/thumbv7m-none-eabi/debug/build/rt-6ee84e54724f2044/out/libasm.a&quot; &quot;/home/japaric/rust-embedded/embedonomicon/ci/asm/app/target/thumbv7m-none-eabi/debug/build/rt-6ee84e54724f2044/out/asm.o&quot;
+</code></pre>
+<pre><code class="language-console">$ grep cargo $(find target -name output)
+</code></pre>
+<pre><code class="language-tetx">cargo:rustc-link-search=/tmp/app/target/thumbv7m-none-eabi/debug/build/rt-6ee84e54724f2044/out
+cargo:rustc-link-lib=static=asm
+cargo:rustc-link-search=native=/tmp/app/target/thumbv7m-none-eabi/debug/build/rt-6ee84e54724f2044/out
+</code></pre>
+<p>我们将做一些类似的事来生成一个归档文件。</p>
+<pre><code class="language-console">$ # `cc` 使用的大多数标志在汇编时没有影响因此我们丢弃它们
+$ arm-none-eabi-as -march=armv7-m asm.s -o asm.o
+
+$ ar crs librt.a asm.o
+
+$ arm-none-eabi-objdump -Cd librt.a
+</code></pre>
+<pre><code class="language-text">In archive librt.a:
+
+asm.o:     file format elf32-littlearm
+
+
+Disassembly of section .text.HardFaultTrampoline:
+
+00000000 &lt;HardFaultTrampoline&gt;:
+   0:	f3ef 8008 	mrs	r0, MSP
+   4:	e7fe      	b.n	0 &lt;HardFault&gt;
+</code></pre>
+<p>接下来我们修改build script以把这个归档文件和<code>rt</code> rlib绑一起。</p>
+<pre><code class="language-console">$ cat ../rt/build.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">use std::{
+    env,
+    error::Error,
+    fs::{self, File},
+    io::Write,
+    path::PathBuf,
+};
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    // build directory for this crate
+    let out_dir = PathBuf::from(env::var_os(&quot;OUT_DIR&quot;).unwrap());
+
+    // extend the library search path
+    println!(&quot;cargo:rustc-link-search={}&quot;, out_dir.display());
+
+    // put `link.x` in the build directory
+    File::create(out_dir.join(&quot;link.x&quot;))?.write_all(include_bytes!(&quot;link.x&quot;))?;
+
+    // link to `librt.a`
+    fs::copy(&quot;librt.a&quot;, out_dir.join(&quot;librt.a&quot;))?; // &lt;- NEW!
+    println!(&quot;cargo:rustc-link-lib=static=rt&quot;); // &lt;- NEW!
+
+    // rebuild if `librt.a` changed
+    println!(&quot;cargo:rerun-if-changed=librt.a&quot;); // &lt;- NEW!
+
+    Ok(())
+}</code></pre></pre>
+<p>现在我们可以用以前的简单程序测试这个新版本，我们将得到相同的输出</p>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -d --no-show-raw-insn --print-imm-hex
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+
+Disassembly of section .text:
+
+&lt;HardFault&gt;:
+               	b	0x40 &lt;HardFault&gt;        @ imm = #-0x4
+
+&lt;main&gt;:
+               	b	0x42 &lt;main&gt;             @ imm = #-0x4
+
+&lt;Reset&gt;:
+               	push	{r7, lr}
+               	mov	r7, sp
+               	bl	0x42 &lt;main&gt;             @ imm = #-0xa
+               	trap
+
+&lt;UsageFault&gt;:
+               	b	0x4e &lt;UsageFault&gt;       @ imm = #-0x4
+
+&lt;HardFaultTrampoline&gt;:
+               	mrs	r0, msp
+               	b	0x40 &lt;HardFault&gt;        @ imm = #-0x18
+</code></pre>
+<blockquote>
+<p><strong>注意</strong>: 像之前一样我已经注释掉了RAM的初始化以让反汇编变得更小。</p>
+</blockquote>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -s -j .vector_table
+</code></pre>
+<pre><code class="language-text">
+app:	file format elf32-littlearm
+Contents of section .vector_table:
+ 0000 00000120 45000000 4f000000 51000000  ... E...O...Q...
+ 0010 4f000000 4f000000 4f000000 00000000  O...O...O.......
+ 0020 00000000 00000000 00000000 4f000000  ............O...
+ 0030 00000000 00000000 4f000000 4f000000  ........O...O...
+</code></pre>
+<p>搬运预先汇编好的归档文件的缺点是，在最糟糕的情况下，库所支持的每个编译目标都需要有一个build工件。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="使用符号做日志"><a class="header" href="#使用符号做日志">使用符号做日志</a></h1>
+<p>这部分将展示如何使用符号和ELF格式去实现超级廉价的日志。</p>
+<h2 id="任意符号"><a class="header" href="#任意符号">任意符号</a></h2>
+<p>当我们想要crates之间存在一个稳定的符号接口时，我们主要使用<code>no_mangle</code>属性，有时是<code>export_name</code>属性。<code>export_name</code> attribtue采用一个字符串作为符号的名字，而<code>#[no_mangle]</code>本质上是<code>#[export_name = &lt;item-name&gt;]</code>的语法糖。</p>
+<p>事实证明，名字并不局限于单个单词；我们可以使用任意的字符串，比如语句，作为<code>export_name</code>属性的参数。至少当输出格式是ELF时，任何不包含空字节的内容都可以。</p>
+<p>让我们看下:</p>
+<pre><code class="language-console">$ cargo new --lib foo
+
+$ cat foo/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[export_name = &quot;Hello, world!&quot;]
+#[used]
+static A: u8 = 0;
+
+#[export_name = &quot;こんにちは&quot;]
+#[used]
+static B: u8 = 0;
+<span class="boring">}</span></code></pre></pre>
+<pre><code class="language-console">$ ( cd foo &amp;&amp; cargo nm --lib )
+foo-d26a39c34b4e80ce.3lnzqy0jbpxj4pld.rcgu.o:
+0000000000000000 r Hello, world!
+0000000000000000 V __rustc_debug_gdb_scripts_section__
+0000000000000000 r こんにちは
+</code></pre>
+<p>你能看出这有什么用吗?</p>
+<h2 id="编码"><a class="header" href="#编码">编码</a></h2>
+<p>这是接下来要做的：我们将为每个日志信息创造一个<code>static</code>变量，但是不是将信息存储<em>进</em>变量中，我们将把信息存储进变量的<em>符号名</em>中。然后，我们将记录的不是<code>static</code>变量的内容，而是它们的地址。</p>
+<p>只要<code>static</code>变量的大小不是零，每个变量的地址就会不同。这里我们要做的是将每个信息有效地编码为一个唯一的标识符，正好变量的地址满足这个要求。日志系统必须有能力将这个id解码回日志信息。</p>
+<p>让我们来编写一些代码解释下这个想法。</p>
+<p>在这个例子里我们将需要一些工具来执行I/O操作，因此我们将使用<a href="https://crates.io/crates/cortex-m-semihosting"><code>cortex-m-semihosting</code></a>库。Semihosting是一个技术，它可以让一个目标设备借用主机的I/O功能；这里，主机通常是指用来调试目标设备的机器。在我们的例子里，QEMU支持开箱即用的semihosting，因此不需要调试器。在一个真正的设备上你可以使用其它方法来执行I/O操作比如一个串口；在这个例子里我们使用semihosting，因为这是在QEMU上进行I/O操作的最简单的方法。</p>
+<p>这里是代码</p>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use core::fmt::Write;
+use cortex_m_semihosting::{debug, hio};
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let mut hstdout = hio::hstdout().unwrap();
+
+    #[export_name = &quot;Hello, world!&quot;]
+    static A: u8 = 0;
+
+    let _ = writeln!(hstdout, &quot;{:#x}&quot;, &amp;A as *const u8 as usize);
+
+    #[export_name = &quot;Goodbye&quot;]
+    static B: u8 = 0;
+
+    let _ = writeln!(hstdout, &quot;{:#x}&quot;, &amp;B as *const u8 as usize);
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}</code></pre></pre>
+<p>我们也可以使用<code>debug::exit</code> API来让程序终结QEMU进程。这很方便，这样我们就不必手动终结QEMU进程了。</p>
+<p>这里是Cargo.toml的<code>dependencies</code>部分:</p>
+<pre><code class="language-toml">[dependencies]
+cortex-m-semihosting = &quot;0.3.1&quot;
+rt = { path = &quot;../rt&quot; }
+</code></pre>
+<p>现在我们可以编译程序了</p>
+<pre><code class="language-console">$ cargo build
+</code></pre>
+<p>为了让它跑起来，我们需要给QEMU命令添加 <code>--semihosting-config</code> 标志:</p>
+<pre><code class="language-console">$ qemu-system-arm \
+      -cpu cortex-m3 \
+      -machine lm3s6965evb \
+      -nographic \
+      -semihosting-config enable=on,target=native \
+      -kernel target/thumbv7m-none-eabi/debug/app
+</code></pre>
+<pre><code class="language-text">0x1fe0
+0x1fe1
+</code></pre>
+<blockquote>
+<p><strong>注意</strong>：你主机上获得的地址可能不是这些地址，因为当工具链变了的时候<code>static</code>变量的地址不保障仍然是一样的(比如 优化可能会改进地址)。</p>
+</blockquote>
+<p>现在我们有两个地址被打印到控制台上了。</p>
+<h2 id="解码"><a class="header" href="#解码">解码</a></h2>
+<p>我们如何把这些地址转换成字符串呢?答案在ELF文件的符号表中。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.rodata\s*0*1\b'
+</code></pre>
+<pre><code class="language-text">00001fe1 g       .rodata		 00000001 Goodbye
+00001fe0 g       .rodata		 00000001 Hello, world!
+$ # 第一列是符号地址；最后一列是符号名
+</code></pre>
+<p><code>objdump -t</code> 打印符号表。这个表包含<em>所有</em>的符号但是我们只查找<code>.rodata</code>中的符号，且它的大小只有一个字节(我们的变量类型是<code>u8</code>) 。</p>
+<p>需要注意的是，在优化程序时，符号的地址可能会改变。让我们检查下。</p>
+<blockquote>
+<p><strong>小技巧</strong> 你可以在Cargo配置文件(<code>.cargo/config</code>)中把 <code>target.thumbv7m-none-eabi.runner</code> 设置成之前(<code>qemu-system-arm -cpu (..)</code>) 的QEMU命令以让<code>cargo run</code>使用这个<em>runner</em>执行输出的二进制项。</p>
+</blockquote>
+<pre><code class="language-console">$ head -n2 .cargo/config
+</code></pre>
+<pre><code class="language-toml">[target.thumbv7m-none-eabi]
+runner = &quot;qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel&quot;
+</code></pre>
+<pre><code class="language-console">$ cargo run --release
+     Running `qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel target/thumbv7m-none-eabi/release/app`
+</code></pre>
+<pre><code class="language-text">0xb9c
+0xb9d
+</code></pre>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -t | grep '\.rodata\s*0*1\b'
+</code></pre>
+<pre><code class="language-text">00000b9d g     O .rodata	00000001 Goodbye
+00000b9c g     O .rodata	00000001 Hello, world!
+</code></pre>
+<p>所以，请确保在找ELF文件中的字符串的时候，这个ELF文件是你执行的那个ELF文件。</p>
+<p>当然，可以使用一个工具自动检查ELF文件中的字符串，该工具可以解析ELF文件包含的符号表(<code>.symtab</code>) 。如何实现这样的工具超出了这本书的范围，可以作为一个练习留给读者。</p>
+<h2 id="使它变成零开销"><a class="header" href="#使它变成零开销">使它变成零开销</a></h2>
+<p>我们能做得更好吗?是的，我们可以！</p>
+<p>现在的实现把<code>static</code>变量放在<code>.rodata</code>中，这意味着它们会占用Flash的大小即使我们从不会使用它们的内容。使用一点链接器脚本魔法我们可以让它们占用的Flash空间为<em>零</em>。</p>
+<pre><code class="language-console">$ cat log.x
+</code></pre>
+<pre><code class="language-text">SECTIONS
+{
+  .log 0 (INFO) : {
+    *(.log);
+  }
+}
+</code></pre>
+<p>我们将把<code>static</code>变量放在这个新的输出的<code>.log</code> section中。这个链接器脚本将把输入目标文件的<code>.log</code> section中的所有符号集中起来并把它们放进一个输出的<code>.log</code> section中。我们在<a href="memory-layout.html">存储布局</a>章节中已经见过这个方法了。</p>
+<p>这个<code>(INFO)</code>部分是新的知识点；这告诉链接器这个section是一个非可分配部分。非可分配部分在ELF中作为元数据被保留起来但是它们不会被加载到目标设备上。</p>
+<p>我们也可以指定这个输出section的起始地址：<code>.log 0 (INFO)</code> 中的<code>0</code> 。</p>
+<p>我们可以做的其它改进是从格式化的I/O(<code>fmt::Write</code>)切换到二进制I/O，这是指把地址作为字节而不是字符串往主机发送。</p>
+<p>二进制序列化很难，但是把每个地址当做一个字节来序列化就很简单了，这样我们就不必担心大小端或者分帧。这个格式的缺点是单个字节只能表示最多256个不同的地址。</p>
+<p>添加上这些修改：</p>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m_semihosting::{debug, hio};
+
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let mut hstdout = hio::hstdout().unwrap();
+
+    #[export_name = &quot;Hello, world!&quot;]
+    #[link_section = &quot;.log&quot;] // &lt;- NEW!
+    static A: u8 = 0;
+
+    let address = &amp;A as *const u8 as usize as u8;
+    hstdout.write_all(&amp;[address]).unwrap(); // &lt;- CHANGED!
+
+    #[export_name = &quot;Goodbye&quot;]
+    #[link_section = &quot;.log&quot;] // &lt;- NEW!
+    static B: u8 = 0;
+
+    let address = &amp;B as *const u8 as usize as u8;
+    hstdout.write_all(&amp;[address]).unwrap(); // &lt;- CHANGED!
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}</code></pre></pre>
+<p>在运行这个程序之前，必须要在传递给链接器的参数之后添加<code>-Tlog.x</code> 。可以在Cargo的配置文件中完成它。</p>
+<pre><code class="language-console">$ cat .cargo/config
+</code></pre>
+<pre><code class="language-toml">[target.thumbv7m-none-eabi]
+runner = &quot;qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel&quot;
+rustflags = [
+  &quot;-C&quot;, &quot;link-arg=-Tlink.x&quot;,
+  &quot;-C&quot;, &quot;link-arg=-Tlog.x&quot;, # &lt;- NEW!
+]
+
+[build]
+target = &quot;thumbv7m-none-eabi&quot;
+</code></pre>
+<p>现在可以运行了!因为现在输出是一个二进制的格式，所以通过管道将它输入<code>xxd</code>命令中重新格式化它为十六进制的字符串。</p>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0001
+</code></pre>
+<p>地址是<code>0x00</code>和<code>0x01</code> 。让我们现在看下符号表。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000001 g     O .log	00000001 Goodbye
+00000000 g     O .log	00000001 Hello, world!
+</code></pre>
+<p>这是我们的字符串。可以看到它们的地址现在开始于零；这是因为输出的<code>.log</code> section设置了一个起始地址。</p>
+<p>每个变量是一个字节的大小因为使用了<code>u8</code>作为它们的类型。如果我们使用类似于<code>u16</code>的东西，那么所有的地址都是偶数，我们将无法有效的使用所有的地址空间(<code>0...255</code>) 。</p>
+<h2 id="打包"><a class="header" href="#打包">打包</a></h2>
+<p>注意到，记录一个字符串的步骤总是一样的，因此我们可以把它们重构为宏放在自己的库中。此外，通过将I/O部分抽象成一个trait，我们还可以提高日志库的可重用性。</p>
+<pre><code class="language-console">$ cargo new --lib log
+
+$ cat log/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_std]
+
+<span class="boring">fn main() {
+</span>pub trait Log {
+    type Error;
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+#[macro_export]
+macro_rules! log {
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log&quot;]
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+<span class="boring">}</span></code></pre></pre>
+<p>因为这个库依赖<code>.log</code> section，所以它应该负责提供<code>log.x</code>链接器脚本，让我们来实现这一需求。</p>
+<pre><code class="language-console">$ mv log.x ../log/
+</code></pre>
+<pre><code class="language-console">$ cat ../log/build.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">use std::{env, error::Error, fs::File, io::Write, path::PathBuf};
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    // Put the linker script somewhere the linker can find it
+    let out = PathBuf::from(env::var(&quot;OUT_DIR&quot;)?);
+
+    File::create(out.join(&quot;log.x&quot;))?.write_all(include_bytes!(&quot;log.x&quot;))?;
+
+    println!(&quot;cargo:rustc-link-search={}&quot;, out.display());
+
+    Ok(())
+}</code></pre></pre>
+<p>现在我们可以重构我们的应用，让它使用<code>log!</code>宏:</p>
+<pre><code class="language-console">$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m_semihosting::{
+    debug,
+    hio::{self, HStdout},
+};
+
+use log::{log, Log};
+use rt::entry;
+
+struct Logger {
+    hstdout: HStdout,
+}
+
+impl Log for Logger {
+    type Error = ();
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), ()&gt; {
+        self.hstdout.write_all(&amp;[address])
+    }
+}
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let hstdout = hio::hstdout().unwrap();
+    let mut logger = Logger { hstdout };
+
+    let _ = log!(logger, &quot;Hello, world!&quot;);
+
+    let _ = log!(logger, &quot;Goodbye&quot;);
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}</code></pre></pre>
+<p>不要忘记将<code>Cargo.toml</code>文件更新成依赖新的<code>log</code>库 。</p>
+<pre><code class="language-console">$ tail -n4 Cargo.toml
+</code></pre>
+<pre><code class="language-toml">[dependencies]
+cortex-m-semihosting = &quot;0.3.1&quot;
+log = { path = &quot;../log&quot; }
+rt = { path = &quot;../rt&quot; }
+</code></pre>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0001
+</code></pre>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000001 g     O .log	00000001 Goodbye
+00000000 g     O .log	00000001 Hello, world!
+</code></pre>
+<p>与之前一样的输出!</p>
+<h2 id="额外任务多层日志等级"><a class="header" href="#额外任务多层日志等级">额外任务：多层日志等级</a></h2>
+<p>许多日志框架提供方法让你可以使用不同的<em>日志等级</em>去记录信息。这些日志等级表示信息的严重性：“这是一个错误”，“这只是一个警告”，等等。当搜寻，比如，错误信息时，这些日志等级可以被用来过滤掉不重要的信息。</p>
+<p>我们可以扩展我们的日志库，让它在不增加空间的情况下支持日志等级。这是我们接下来要做的：</p>
+<p>我们有一个与这些信息相关的平铺的地址空间：从<code>0</code>到<code>255</code>(包含255)。为了让事情简单点，我们只想区分错误信息和警告信息。我们可以把所有的错误信息放在地址空间的开始处，并将所有的警告信息放在错误信息之后。如果解码器知道第一个警告信息的地址，那么它可以用这个地址分类出消息来。这个方法可以被扩展到支持两个以上的日志等级。</p>
+<p>通过使用两个新的宏：<code>error!</code>和<code>warn!</code>替代<code>log</code>宏来测试下这个方法。</p>
+<pre><code class="language-console">$ cat ../log/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_std]
+
+<span class="boring">fn main() {
+</span>pub trait Log {
+    type Error;
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+/// Logs messages at the ERROR log level
+#[macro_export]
+macro_rules! error {
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log.error&quot;] // &lt;- CHANGED!
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+
+/// Logs messages at the WARNING log level
+#[macro_export]
+macro_rules! warn {
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log.warning&quot;] // &lt;- CHANGED!
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+<span class="boring">}</span></code></pre></pre>
+<p>通过将信息放在不同的link sections中，可以区分错误和警告。</p>
+<p>下一个必须要做的事是修改链接器脚本，将错误信息放在警告信息之前。</p>
+<pre><code class="language-console">$ cat ../log/log.x
+</code></pre>
+<pre><code class="language-text">SECTIONS
+{
+  .log 0 (INFO) : {
+    *(.log.error);
+    __log_warning_start__ = .;
+    *(.log.warning);
+  }
+}
+</code></pre>
+<p>我们也将错误和警告之间的边界命名为<code>__log_warning_start__</code>。这个符号的地址将是第一个警告信息的地址。</p>
+<p>我们现在可以改下应用，让应用使用这些新的宏。</p>
+<pre><code class="language-console">$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m_semihosting::{
+    debug,
+    hio::{self, HStdout},
+};
+
+use log::{error, warn, Log};
+use rt::entry;
+
+entry!(main);
+
+fn main() -&gt; ! {
+    let hstdout = hio::hstdout().unwrap();
+    let mut logger = Logger { hstdout };
+
+    let _ = warn!(logger, &quot;Hello, world!&quot;); // &lt;- CHANGED!
+
+    let _ = error!(logger, &quot;Goodbye&quot;); // &lt;- CHANGED!
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}
+
+struct Logger {
+    hstdout: HStdout,
+}
+
+impl Log for Logger {
+    type Error = ();
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), ()&gt; {
+        self.hstdout.write_all(&amp;[address])
+    }
+}</code></pre></pre>
+<p>输出不会改变太多：</p>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0100
+</code></pre>
+<p>输出仍然是两个字节，但是错误被赋予了地址0，警告被赋予了地址1，即使警告被先记录。</p>
+<p>现在看一下符号表。</p>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000000 g     O .log	00000001 Goodbye
+00000001 g     O .log	00000001 Hello, world!
+00000001 g       .log	00000000 __log_warning_start__
+</code></pre>
+<p>现在在<code>.log</code> section中，有了一个额外符号，<code>__log_warning_start__</code> 。这个符号的地址是第一个警告信息的地址。地址低于这个值的符号是错误，剩余的符号是警告。</p>
+<p>使用一个合适的解码器你可以从所有这些信息获得以下人类可读的输出：</p>
+<pre><code class="language-text">WARNING Hello, world!
+ERROR Goodbye
+</code></pre>
+<hr />
+<p>如果你喜欢这部分，看一下<a href="https://crates.io/crates/stlog"><code>stlog</code></a>日志框架，它完整实现了这个想法。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="全局单例"><a class="header" href="#全局单例">全局单例</a></h1>
+<p>在这部分会说到如何实现一个全局的，可共享的单例。 The embedded Rust book 中提到了局部的，拥有所有权的单例，
+这对Rust来说几乎是独一无二的。全局单例本质上就是在C和C++中见到的那些单例模式；它们不止出现在嵌入式开发中，但是因为它们涉及到符号，所以似乎很适合这本书的内容。</p>
+<blockquote>
+<p><strong>TODO</strong>(resources team) link &quot;the embedded Rust book&quot; to the singletons
+section when it's up</p>
+</blockquote>
+<p>为了解释这部分，我们将扩展我们在上部分开发的日志以支持全局日志记录。结果与在the embedded Rust book提到的<code>#[global_allocator]</code>功能非常相似。</p>
+<blockquote>
+<p><strong>TODO</strong>(resources team) link <code>#[global_allocator]</code> to the collections chapter
+of the book when it's in a more stable location.</p>
+</blockquote>
+<p>总结下我们需要的东西：</p>
+<p>在上一部分我们创造了一个<code>log!</code>宏以通过一个特定的logger去记录信息，logger是一个实现了<code>Log</code> trait的值。
+<code>log!</code>宏的语法是<code>log!(logger, &quot;String&quot;)</code>。我们想要扩展下宏，让<code>log!(&quot;String&quot;)</code>也可以工作。没有<code>logger</code>的版本的宏可以通过一个全局的logger去记录信息；这是<code>std::println!</code>的工作方式。我们也需要一个机制去声明全局logger是什么；这部分与<code>#[global_allocator]</code>相似。</p>
+<p>可能是在top crate中声明了全局logger，也可能是在top crate中定义了全局logger的类型。在这种情况下，依赖<em>不</em>知道全局logger的确切类型。为了支持这种情况，我们需要一些间接方法。</p>
+<p>我们只在<code>log</code>库中声明全局logger的<em>接口</em>，而不是在<code>log</code>库中硬编码全局logger的类型。我们将会给<code>log</code>库添加一个新的trait，<code>GlobalLog</code>。<code>log!</code>宏也必须要使用这个trait 。</p>
+<pre><code class="language-console">$ cat ../log/src/lib.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_std]
+
+<span class="boring">fn main() {
+</span>// NEW!
+pub trait GlobalLog: Sync {
+    fn log(&amp;self, address: u8);
+}
+
+pub trait Log {
+    type Error;
+
+    fn log(&amp;mut self, address: u8) -&gt; Result&lt;(), Self::Error&gt;;
+}
+
+#[macro_export]
+macro_rules! log {
+    // NEW!
+    ($string:expr) =&gt; {
+        unsafe {
+            extern &quot;Rust&quot; {
+                static LOGGER: &amp;'static dyn $crate::GlobalLog;
+            }
+
+            #[export_name = $string]
+            #[link_section = &quot;.log&quot;]
+            static SYMBOL: u8 = 0;
+
+            $crate::GlobalLog::log(LOGGER, &amp;SYMBOL as *const u8 as usize as u8)
+        }
+    };
+
+    ($logger:expr, $string:expr) =&gt; {{
+        #[export_name = $string]
+        #[link_section = &quot;.log&quot;]
+        static SYMBOL: u8 = 0;
+
+        $crate::Log::log(&amp;mut $logger, &amp;SYMBOL as *const u8 as usize as u8)
+    }};
+}
+
+// NEW!
+#[macro_export]
+macro_rules! global_logger {
+    ($logger:expr) =&gt; {
+        #[no_mangle]
+        pub static LOGGER: &amp;dyn $crate::GlobalLog = &amp;$logger;
+    };
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这里有很多东西要拆开来看。</p>
+<p>先从trait开始。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait GlobalLog: Sync {
+    fn log(&amp;self, address: u8);
+}
+<span class="boring">}</span></code></pre></pre>
+<p><code>GlobalLog</code>和<code>Log</code>都有一个<code>log</code>方法。不同的是，<code>GlobalLog</code>需要获取一个对接收者的共享的引用(<code>&amp;self</code>)。
+因为全局logger是一个<code>static</code>变量所以这是必须的。之后会提到更多。</p>
+<p>另一个不同是，<code>GlobalLog.log</code>不返回一个<code>Result</code>。 这意味着它<em>不</em>会向调用者报告错误。这对用来实现全局单例的traits来说不是一个严格的要求。全局单例中有错误处理很好，但是另一方面全局版本的<code>log!</code>宏的的所有用户必须就错误类型达成一致。这里通过让<code>GlobalLog</code>的实现者来处理错误可以简化这个接口。</p>
+<p>还有另一个不同，<code>GlobalLog</code>要求实现者是<code>Sync</code>的，它可以在线程间被共享。对于放置在<code>static</code>变量中的值来说这是一个要求；它们的类型必须实现<code>Sync</code> trait 。</p>
+<p>此时可能还不完全清楚接口为什么必须要这样。库的其它部分将会解释得更清楚，所以请继续读下去。</p>
+<p>接下来是<code>log!</code>宏：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>    ($string:expr) =&gt; {
+        unsafe {
+            extern &quot;Rust&quot; {
+                static LOGGER: &amp;'static dyn $crate::GlobalLog;
+            }
+
+            #[export_name = $string]
+            #[link_section = &quot;.log&quot;]
+            static SYMBOL: u8 = 0;
+
+            $crate::GlobalLog::log(LOGGER, &amp;SYMBOL as *const u8 as usize as u8)
+        }
+    };
+<span class="boring">}</span></code></pre></pre>
+<p>当不使用一个指定的<code>$logger</code>去调用宏的时候，宏会使用一个被叫做<code>LOGGER</code>的<code>extern</code> <code>static</code>变量去记录信息。这个变量<em>是</em>定义在其它地方的全局logger；这就是为什么我们会使用<code>extern</code>块。我们可以在<a href="main.html">main接口</a>章节中看到这种模式。</p>
+<p>我们需要声明一个与<code>LOGGER</code>有关的类型要不然代码不会做类型检查。此时我们不知道<code>LOGGER</code>的具体类型，但是我们知道，或者至少要求，它要实现<code>GlobalLog</code> trait，所以这里我们可以使用一个trait对象。</p>
+<p>剩余的宏展开与局部版本的<code>log!</code>宏展开很像，因此我不会在这里解释它，因为在<a href="logging.html">先前</a>的章节中已经解释过了。</p>
+<p>现在我们知道<code>LOGGER</code>必须是一个trait对象，为什么我们要在<code>GlobalLog</code>中去掉关联的<code>Error</code>类型更清楚了。如果我们没有去掉<code>Error</code>类型，那么我们将需要为<code>LOGGER</code>的类型签名中的<code>Error</code>挑选一个类型。这就是我之前提到的“<code>log!</code>的所有用户需要对错误类型达成一致”。</p>
+<p>现在是最后的片段：<code>global_logger!</code>宏。它可以是一个过程宏attribute，但是写一个<code>macro_rules!</code>宏更简单。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[macro_export]
+macro_rules! global_logger {
+    ($logger:expr) =&gt; {
+        #[no_mangle]
+        pub static LOGGER: &amp;dyn $crate::GlobalLog = &amp;$logger;
+    };
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这个宏生成了<code>log!</code>宏要使用的<code>LOGGER</code>变量。因为我们需要一个稳定的ABI接口，所以我们使用了<code>no_mangle</code> attribute 。这样子的话，<code>LOGGER</code>的符号名就会是<code>LOGGER</code>，这是<code>log!</code>宏期望的符号名。</p>
+<p>另外重要的一点是，这个静态变量的类型必须精确地匹配在<code>log!</code>宏的展开中所使用的类型。如果它们不匹配，由于ABI的误匹配将会导致坏事发生。</p>
+<p>让我们来写一个使用这个新的全局logger功能的例子。</p>
+<pre><code class="language-console">$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust">#![no_main]
+#![no_std]
+
+use cortex_m::interrupt;
+use cortex_m_semihosting::{
+    debug,
+    hio::{self, HStdout},
+};
+
+use log::{global_logger, log, GlobalLog};
+use rt::entry;
+
+struct Logger;
+
+global_logger!(Logger);
+
+entry!(main);
+
+fn main() -&gt; ! {
+    log!(&quot;Hello, world!&quot;);
+
+    log!(&quot;Goodbye&quot;);
+
+    debug::exit(debug::EXIT_SUCCESS);
+
+    loop {}
+}
+
+impl GlobalLog for Logger {
+    fn log(&amp;self, address: u8) {
+        // we use a critical section (`interrupt::free`) to make the access to the
+        // `static mut` variable interrupt safe which is required for memory safety
+        interrupt::free(|_| unsafe {
+            static mut HSTDOUT: Option&lt;HStdout&gt; = None;
+
+            // lazy initialization
+            if HSTDOUT.is_none() {
+                HSTDOUT = Some(hio::hstdout()?);
+            }
+
+            let hstdout = HSTDOUT.as_mut().unwrap();
+
+            hstdout.write_all(&amp;[address])
+        }).ok(); // `.ok()` = ignore errors
+    }
+}</code></pre></pre>
+<blockquote>
+<p><strong>TODO</strong>(resources team) use <code>cortex_m::Mutex</code> instead of a <code>static mut</code>
+variable when <code>const fn</code> is stabilized.</p>
+</blockquote>
+<p>我们必须添加<code>cortex-m</code>到这个依赖上。</p>
+<pre><code class="language-console">$ tail -n5 Cargo.toml
+</code></pre>
+<pre><code class="language-text">[dependencies]
+cortex-m = &quot;0.5.7&quot;
+cortex-m-semihosting = &quot;0.3.1&quot;
+log = { path = &quot;../log&quot; }
+rt = { path = &quot;../rt&quot; }
+</code></pre>
+<p>这是在<a href="logging.html">先前</a>章节中所写的某个例子的移植。这里的输出和之前的是一样的。</p>
+<pre><code class="language-console">$ cargo run | xxd -p
+</code></pre>
+<pre><code class="language-text">0001
+</code></pre>
+<pre><code class="language-console">$ cargo objdump --bin app -- -t | grep '\.log'
+</code></pre>
+<pre><code class="language-text">00000001 g     O .log	00000001 Goodbye
+00000000 g     O .log	00000001 Hello, world!
+</code></pre>
+<hr />
+<p>一些读者可能会担心这种全局单例的实现不是零开销的，因为使用trait对象涉及到动态分发(dynamic dispatch)，通过一个虚表(vtable)查找去执行方法调用。</p>
+<p>然而，LLVM足够聪明，可以在使用优化/LTO编译时，消除动态分发。通过在符号表中搜索<code>LOGGER</code>可以确认这一点。</p>
+<pre><code class="language-console">$ cargo objdump --bin app --release -- -t | grep LOGGER
+</code></pre>
+<pre><code class="language-text">
+</code></pre>
+<p>如果没有<code>static</code>，则意味着没有虚表，LLVM能够把所有的<code>LOGGER.log</code>调用变成<code>Logger.log</code>调用。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="直接存储器访问-dma"><a class="header" href="#直接存储器访问-dma">直接存储器访问 (DMA)</a></h1>
+<p>本节会围绕DMA传输，讨论要搭建一个内存安全的API的核心需求。</p>
+<p>DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来执行存储传输。一个DMA传输或多或少等于启动一个进程(看<a href="https://doc.rust-lang.org/std/thread/fn.spawn.html"><code>thread::spawn</code></a>)去执行一个<code>memcpy</code> 。我们将用fork-join模型去解释一个内存安全的API的要求。</p>
+<p>考虑下面的DMA数据类型：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A singleton that represents a single DMA channel (channel 1 in this case)
+///
+/// This singleton has exclusive access to the registers of the DMA channel 1
+pub struct Dma1Channel1 {
+    // ..
+}
+
+impl Dma1Channel1 {
+    /// Data will be written to this `address`
+    ///
+    /// `inc` indicates whether the address will be incremented after every byte transfer
+    ///
+    /// NOTE this performs a volatile write
+    pub fn set_destination_address(&amp;mut self, address: usize, inc: bool) {
+        // ..
+    }
+
+    /// Data will be read from this `address`
+    ///
+    /// `inc` indicates whether the address will be incremented after every byte transfer
+    ///
+    /// NOTE this performs a volatile write
+    pub fn set_source_address(&amp;mut self, address: usize, inc: bool) {
+        // ..
+    }
+
+    /// Number of bytes to transfer
+    ///
+    /// NOTE this performs a volatile write
+    pub fn set_transfer_length(&amp;mut self, len: usize) {
+        // ..
+    }
+
+    /// Starts the DMA transfer
+    ///
+    /// NOTE this performs a volatile write
+    pub fn start(&amp;mut self) {
+        // ..
+    }
+
+    /// Stops the DMA transfer
+    ///
+    /// NOTE this performs a volatile write
+    pub fn stop(&amp;mut self) {
+        // ..
+    }
+
+    /// Returns `true` if there's a transfer in progress
+    ///
+    /// NOTE this performs a volatile read
+    pub fn in_progress() -&gt; bool {
+        // ..
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>假设<code>Dma1Channel1</code>被静态地配置成按one-shot的模式(也即不是circular模式)使用串口(又称作UART或者USART) #1，<code>Serial1</code>。
+<code>Serial1</code>提供下面的<em>阻塞</em>版的API：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A singleton that represents serial port #1
+pub struct Serial1 {
+    // ..
+}
+
+impl Serial1 {
+    /// Reads out a single byte
+    ///
+    /// NOTE: blocks if no byte is available to be read
+    pub fn read(&amp;mut self) -&gt; Result&lt;u8, Error&gt; {
+        // ..
+    }
+
+    /// Sends out a single byte
+    ///
+    /// NOTE: blocks if the output FIFO buffer is full
+    pub fn write(&amp;mut self, byte: u8) -&gt; Result&lt;(), Error&gt; {
+        // ..
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>假设我们想要将<code>Serial1</code> API扩展成可以(a)异步地发送一个缓存区和(b)异步地填充一个缓存区。</p>
+<p>一开始我们将使用一个存储不安全的API，然后我们将迭代它直到它完全变成存储安全的API。在每一步，我们都将向你展示如何破开API，
+让你意识到当使用异步的存储操作时，有哪些问题需要被解决。</p>
+<h2 id="开场"><a class="header" href="#开场">开场</a></h2>
+<p>作为开端，让我们尝试使用<a href="https://doc.rust-lang.org/std/io/trait.Write.html#method.write_all"><code>Write::write_all</code></a> API作为参考。为了简便，让我们忽略所有的错误处理。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A singleton that represents serial port #1
+pub struct Serial1 {
+    // NOTE: we extend this struct by adding the DMA channel singleton
+    dma: Dma1Channel1,
+    // ..
+}
+
+impl Serial1 {
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn write_all&lt;'a&gt;(mut self, buffer: &amp;'a [u8]) -&gt; Transfer&lt;&amp;'a [u8]&gt; {
+        self.dma.set_destination_address(USART1_TX, false);
+        self.dma.set_source_address(buffer.as_ptr() as usize, true);
+        self.dma.set_transfer_length(buffer.len());
+
+        self.dma.start();
+
+        Transfer { buffer }
+    }
+}
+
+/// A DMA transfer
+pub struct Transfer&lt;B&gt; {
+    buffer: B,
+}
+
+impl&lt;B&gt; Transfer&lt;B&gt; {
+    /// Returns `true` if the DMA transfer has finished
+    pub fn is_done(&amp;self) -&gt; bool {
+        !Dma1Channel1::in_progress()
+    }
+
+    /// Blocks until the transfer is done and returns the buffer
+    pub fn wait(self) -&gt; B {
+        // Busy wait until the transfer is done
+        while !self.is_done() {}
+
+        self.buffer
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<blockquote>
+<p><strong>注意：</strong> 不用像上面的API一样，<code>Transfer</code>的API也可以暴露一个futures或者generator。
+这是一个API设计问题，与整个API的内存安全性关系不大，因此我们在本文中不会深入讨论。</p>
+</blockquote>
+<p>我们也可以实现一个异步版本的<a href="https://doc.rust-lang.org/std/io/trait.Read.html#method.read_exact"><code>Read::read_exact</code></a> 。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn read_exact&lt;'a&gt;(&amp;mut self, buffer: &amp;'a mut [u8]) -&gt; Transfer&lt;&amp;'a mut [u8]&gt; {
+        self.dma.set_source_address(USART1_RX, false);
+        self.dma
+            .set_destination_address(buffer.as_mut_ptr() as usize, true);
+        self.dma.set_transfer_length(buffer.len());
+
+        self.dma.start();
+
+        Transfer { buffer }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这里是<code>write_all</code> API的用法：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn write(serial: Serial1) {
+    // fire and forget
+    serial.write_all(b&quot;Hello, world!\n&quot;);
+
+    // do other stuff
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这是使用<code>read_exact</code> API的一个例子：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn read(mut serial: Serial1) {
+    let mut buf = [0; 16];
+    let t = serial.read_exact(&amp;mut buf);
+
+    // do other stuff
+
+    t.wait();
+
+    match buf.split(|b| *b == b'\n').next() {
+        Some(b&quot;some-command&quot;) =&gt; { /* do something */ }
+        _ =&gt; { /* do something else */ }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="memforget"><a class="header" href="#memforget"><code>mem::forget</code></a></h2>
+<p><a href="https://doc.rust-lang.org/std/mem/fn.forget.html"><code>mem::forget</code></a>是一个安全的API。如果我们的API真的是安全的，那么我们应该能够将两者结合使用而不会出现未定义的行为。然而，情况并非如此；考虑下下面的例子：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn unsound(mut serial: Serial1) {
+    start(&amp;mut serial);
+    bar();
+}
+
+#[inline(never)]
+fn start(serial: &amp;mut Serial1) {
+    let mut buf = [0; 16];
+
+    // start a DMA transfer and forget the returned `Transfer` value
+    mem::forget(serial.read_exact(&amp;mut buf));
+}
+
+#[inline(never)]
+fn bar() {
+    // stack variables
+    let mut x = 0;
+    let mut y = 0;
+
+    // use `x` and `y`
+}
+<span class="boring">}</span></code></pre></pre>
+<p>在<code>start</code>中我们启动了一个DMA传输以填充一个在堆上分配的数组，然后<code>mem::forget</code>了被返回的<code>Transfer</code>值。然后我们继续从<code>start</code>返回并执行函数<code>bar</code> 。</p>
+<p>这一系列操作导致了未定义的行为。DMA传输向栈的存储区写入，但是当<code>start</code>返回时，那块存储区域会被释放，
+然后被<code>bar</code>重新用来分配像是<code>x</code>和<code>y</code>这样的变量。在运行时，这可能会导致变量<code>x</code>和<code>y</code>随机更改其值。DMA传输
+也会覆盖掉被函数<code>bar</code>的序言推入栈中的状态(比如link寄存器)。</p>
+<p>注意如果我们不用<code>mem::forget</code>，而是<code>mem::drop</code>，可以让<code>Transfer</code>的析构函数停止DMA的传输，这样程序就变成了安全的了。但是<em>不</em>能依赖于运行析构函数来加强存储安全性因为<code>mem::forget</code>和内存泄露(看下RC cycles)在Rust中是安全的。</p>
+<p>通过在APIs中把缓存的生命周期从<code>'a</code>变成<code>'static</code>来修复这个问题。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn read_exact(&amp;mut self, buffer: &amp;'static mut [u8]) -&gt; Transfer&lt;&amp;'static mut [u8]&gt; {
+        // .. same as before ..
+    }
+
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn write_all(mut self, buffer: &amp;'static [u8]) -&gt; Transfer&lt;&amp;'static [u8]&gt; {
+        // .. same as before ..
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>如果我们尝试复现先前的问题，我们注意到<code>mem::forget</code>不再引起问题了。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[allow(dead_code)]
+fn sound(mut serial: Serial1, buf: &amp;'static mut [u8; 16]) {
+    // NOTE `buf` is moved into `foo`
+    foo(&amp;mut serial, buf);
+    bar();
+}
+
+#[inline(never)]
+fn foo(serial: &amp;mut Serial1, buf: &amp;'static mut [u8]) {
+    // start a DMA transfer and forget the returned `Transfer` value
+    mem::forget(serial.read_exact(buf));
+}
+
+#[inline(never)]
+fn bar() {
+    // stack variables
+    let mut x = 0;
+    let mut y = 0;
+
+    // use `x` and `y`
+}
+<span class="boring">}</span></code></pre></pre>
+<p>像之前一样，在<code>mem::forget</code> <code>Transfer</code>的值之后，DMA传输继续运行着。这次没有问题了，因为<code>buf</code>是静态分配的(比如<code>static mut</code>变量)，不是在栈上。</p>
+<h2 id="重复使用overlapping-use"><a class="header" href="#重复使用overlapping-use">重复使用(Overlapping use)</a></h2>
+<p>我们的API没有阻止用户在DMA传输过程中再次使用<code>Serial</code>接口。这可能导致传输失败或者数据丢失。</p>
+<p>有许多方法可以禁止重叠使用。一个方法是让<code>Transfer</code>获取<code>Serial1</code>的所有权，然后当<code>wait</code>被调用时将它返回。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A DMA transfer
+pub struct Transfer&lt;B&gt; {
+    buffer: B,
+    // NOTE: added
+    serial: Serial1,
+}
+
+impl&lt;B&gt; Transfer&lt;B&gt; {
+    /// Blocks until the transfer is done and returns the buffer
+    // NOTE: the return value has changed
+    pub fn wait(self) -&gt; (B, Serial1) {
+        // Busy wait until the transfer is done
+        while !self.is_done() {}
+
+        (self.buffer, self.serial)
+    }
+
+    // ..
+}
+
+impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    // NOTE we now take `self` by value
+    pub fn read_exact(mut self, buffer: &amp;'static mut [u8]) -&gt; Transfer&lt;&amp;'static mut [u8]&gt; {
+        // .. same as before ..
+
+        Transfer {
+            buffer,
+            // NOTE: added
+            serial: self,
+        }
+    }
+
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    // NOTE we now take `self` by value
+    pub fn write_all(mut self, buffer: &amp;'static [u8]) -&gt; Transfer&lt;&amp;'static [u8]&gt; {
+        // .. same as before ..
+
+        Transfer {
+            buffer,
+            // NOTE: added
+            serial: self,
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>移动语义静态地阻止了当传输在进行时对<code>Serial1</code>的访问。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn read(serial: Serial1, buf: &amp;'static mut [u8; 16]) {
+    let t = serial.read_exact(buf);
+
+    // let byte = serial.read(); //~ ERROR: `serial` has been moved
+
+    // .. do stuff ..
+
+    let (serial, buf) = t.wait();
+
+    // .. do more stuff ..
+}
+<span class="boring">}</span></code></pre></pre>
+<p>还有其它方法可以防止重叠使用。比如，可以往<code>Serial1</code>添加一个(<code>Cell</code>)标志，其指出是否一个DMA传输正在进行中。
+当标志被设置了，<code>read</code>，<code>write</code>，<code>read_exact</code>和<code>write_all</code>全都会在运行时返回一个错误(比如<code>Error::InUse</code>)。
+当使用<code>write_all</code> / <code>read_exact</code>时，会设置标志，在<code>Transfer.wait</code>中，标志会被清除。</p>
+<h2 id="编译器误优化"><a class="header" href="#编译器误优化">编译器(误)优化</a></h2>
+<p>编译器可以自由地重新排序和合并不是volatile的存储操作以更好地优化一个程序。使用我们现在的API，这种自由度会导致未定义的行为。想一下下面的例子：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn reorder(serial: Serial1, buf: &amp;'static mut [u8]) {
+    // zero the buffer (for no particular reason)
+    buf.iter_mut().for_each(|byte| *byte = 0);
+
+    let t = serial.read_exact(buf);
+
+    // ... do other stuff ..
+
+    let (buf, serial) = t.wait();
+
+    buf.reverse();
+
+    // .. do stuff with `buf` ..
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这里编译器可以将<code>buf.reverse()</code>移到<code>t.wait()</code>之前，其将导致一个数据竞争问题：处理器和DMA最终都会同时修改<code>buf</code> 。同样地编译器可以将赋零操作放到<code>read_exact</code>之后，它也会导致一个数据竞争问题。</p>
+<p>为了避免这些存在问题的重排序，我们可以使用一个 <a href="https://doc.rust-lang.org/core/sync/atomic/fn.compiler_fence.html"><code>compiler_fence</code></a></p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn read_exact(mut self, buffer: &amp;'static mut [u8]) -&gt; Transfer&lt;&amp;'static mut [u8]&gt; {
+        self.dma.set_source_address(USART1_RX, false);
+        self.dma
+            .set_destination_address(buffer.as_mut_ptr() as usize, true);
+        self.dma.set_transfer_length(buffer.len());
+
+        // NOTE: added
+        atomic::compiler_fence(Ordering::Release);
+
+        // NOTE: this is a volatile *write*
+        self.dma.start();
+
+        Transfer {
+            buffer,
+            serial: self,
+        }
+    }
+
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn write_all(mut self, buffer: &amp;'static [u8]) -&gt; Transfer&lt;&amp;'static [u8]&gt; {
+        self.dma.set_destination_address(USART1_TX, false);
+        self.dma.set_source_address(buffer.as_ptr() as usize, true);
+        self.dma.set_transfer_length(buffer.len());
+
+        // NOTE: added
+        atomic::compiler_fence(Ordering::Release);
+
+        // NOTE: this is a volatile *write*
+        self.dma.start();
+
+        Transfer {
+            buffer,
+            serial: self,
+        }
+    }
+}
+
+impl&lt;B&gt; Transfer&lt;B&gt; {
+    /// Blocks until the transfer is done and returns the buffer
+    pub fn wait(self) -&gt; (B, Serial1) {
+        // NOTE: this is a volatile *read*
+        while !self.is_done() {}
+
+        // NOTE: added
+        atomic::compiler_fence(Ordering::Acquire);
+
+        (self.buffer, self.serial)
+    }
+
+    // ..
+}
+<span class="boring">}</span></code></pre></pre>
+<p>我们在<code>read_exact</code>和<code>write_all</code>中使用<code>Ordering::Release</code>以避免所有的正在进行中的存储操作被移动到<code>self.dma.start()</code>后面去，其执行了一个volatile写入。</p>
+<p>同样地，我们在<code>Transfer.wait</code>中使用<code>Ordering::Acquire</code>以避免所有的后续的存储操作被移到<code>self.is_done()</code><em>之前</em>，其执行了一个volatile读入。</p>
+<p>为了更好地展示fences的影响，稍微修改下上个部分中的例子。我们将fences和它们的orderings添加到注释中。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn reorder(serial: Serial1, buf: &amp;'static mut [u8], x: &amp;mut u32) {
+    // zero the buffer (for no particular reason)
+    buf.iter_mut().for_each(|byte| *byte = 0);
+
+    *x += 1;
+
+    let t = serial.read_exact(buf); // compiler_fence(Ordering::Release) ▲
+
+    // NOTE: the processor can't access `buf` between the fences
+    // ... do other stuff ..
+    *x += 2;
+
+    let (buf, serial) = t.wait(); // compiler_fence(Ordering::Acquire) ▼
+
+    *x += 3;
+
+    buf.reverse();
+
+    // .. do stuff with `buf` ..
+}
+<span class="boring">}</span></code></pre></pre>
+<p>由于<code>Release</code> fence，赋零操作<em>不</em>能被移到<code>read_exact</code><em>之后</em>。同样地，由于<code>Acquire</code> fence，<code>reverse</code>操作<em>不</em>能被移动<code>wait</code>之前。
+在两个fences<em>之间</em>的存储操作<em>可以</em>在fences间自由地重新排序，但是这些操作都不会涉及到<code>buf</code>，所以这种重新排序<em>不</em>会导致未定义的行为。</p>
+<p>请注意<code>compiler_fence</code>比要求的强一些。比如，fences将防止在<code>x</code>上的操作被合并即使我们知道<code>buf</code>不会与<code>x</code>重叠(由于Rust的别名规则)。
+然而，没有比<code>compiler_fence</code>更精细的内部函数了。</p>
+<h3 id="我们需不需要内存屏障"><a class="header" href="#我们需不需要内存屏障">我们需不需要内存屏障？</a></h3>
+<p>这取决于目标平台的架构。在Cortex M0到M4F核心的例子里，<a href="https://static.docs.arm.com/dai0321/a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf">AN321</a>说到：</p>
+<blockquote>
+<p>3.2 主要场景</p>
+<p>(..)</p>
+<p>在Cortex-M处理器中，很少需要用到DMB因为它们不会重新排序存储传输。
+然而，如果软件要在其它ARM处理器中复用，那么就需要用到，特别是多主机系统。比如：</p>
+<ul>
+<li>DMA控制器配置。在CPU存储访问和一个DMA操作间需要一个屏障。</li>
+</ul>
+<p>(..)</p>
+<p>4.18 多主机系统</p>
+<p>(..)</p>
+<p>把47页图41和图42的例子中的DMB或者DSB指令去除掉不会导致任何错误，因为Cortex-M处理器：</p>
+<ul>
+<li>不会重新排序存储传输。</li>
+<li>不会允许两个写传输重叠。</li>
+</ul>
+</blockquote>
+<p>这里图41中展示了在启动DMA传输前使用了一个DMB（存储屏障）指令。</p>
+<p>在Cortex-M7内核的例子中，如果你使用了数据缓存（DCache），那么你需要存储屏障（DMB/DSB），除非你手动地无效化被DMA使用的缓存。即使将数据缓存取消掉，可能依然需要内存屏障以避免存储缓存中出现重新排序。</p>
+<p>如果你的目标平台是一个多核系统，那么很可能你需要内存屏障。</p>
+<p>如果你需要内存屏障，那么你需要使用<a href="https://doc.rust-lang.org/core/sync/atomic/fn.fence.html"><code>atomic::fence</code></a>而不是<code>compiler_fence</code>。这在Cortex-M设备上会生成一个DMB指令。</p>
+<h2 id="泛化缓存"><a class="header" href="#泛化缓存">泛化缓存</a></h2>
+<p>我们的API太受限了。比如，下面的程序即使是有效的也不会被通过。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn reuse(serial: Serial1, msg: &amp;'static mut [u8]) {
+    // send a message
+    let t1 = serial.write_all(msg);
+
+    // ..
+
+    let (msg, serial) = t1.wait(); // `msg` is now `&amp;'static [u8]`
+
+    msg.reverse();
+
+    // now send it in reverse
+    let t2 = serial.write_all(msg);
+
+    // ..
+
+    let (buf, serial) = t2.wait();
+
+    // ..
+}
+<span class="boring">}</span></code></pre></pre>
+<p>为了能接受这样的程序，我们可以让缓存参数更泛化点。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// as-slice = &quot;0.1.0&quot;
+use as_slice::{AsMutSlice, AsSlice};
+
+impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn read_exact&lt;B&gt;(mut self, mut buffer: B) -&gt; Transfer&lt;B&gt;
+    where
+        B: AsMutSlice&lt;Element = u8&gt;,
+    {
+        // NOTE: added
+        let slice = buffer.as_mut_slice();
+        let (ptr, len) = (slice.as_mut_ptr(), slice.len());
+
+        self.dma.set_source_address(USART1_RX, false);
+
+        // NOTE: tweaked
+        self.dma.set_destination_address(ptr as usize, true);
+        self.dma.set_transfer_length(len);
+
+        atomic::compiler_fence(Ordering::Release);
+        self.dma.start();
+
+        Transfer {
+            buffer,
+            serial: self,
+        }
+    }
+
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    fn write_all&lt;B&gt;(mut self, buffer: B) -&gt; Transfer&lt;B&gt;
+    where
+        B: AsSlice&lt;Element = u8&gt;,
+    {
+        // NOTE: added
+        let slice = buffer.as_slice();
+        let (ptr, len) = (slice.as_ptr(), slice.len());
+
+        self.dma.set_destination_address(USART1_TX, false);
+
+        // NOTE: tweaked
+        self.dma.set_source_address(ptr as usize, true);
+        self.dma.set_transfer_length(len);
+
+        atomic::compiler_fence(Ordering::Release);
+        self.dma.start();
+
+        Transfer {
+            buffer,
+            serial: self,
+        }
+    }
+}
+
+<span class="boring">}</span></code></pre></pre>
+<blockquote>
+<p><strong>注意:</strong> 可以使用 <code>AsRef&lt;[u8]&gt;</code> (<code>AsMut&lt;[u8]&gt;</code>) 而不是
+<code>AsSlice&lt;Element = u8&gt;</code> (<code>AsMutSlice&lt;Element = u8</code>).</p>
+</blockquote>
+<p>现在 <code>reuse</code> 程序可以通过了。</p>
+<h2 id="不可移动的缓存"><a class="header" href="#不可移动的缓存">不可移动的缓存</a></h2>
+<p>这么修改后，API也可以通过值传递接受数组。（比如 <code>[u8; 16]</code>）。然后，使用数组会导致指针无效化。考虑下面的程序。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn invalidate(serial: Serial1) {
+    let t = start(serial);
+
+    bar();
+
+    let (buf, serial) = t.wait();
+}
+
+#[inline(never)]
+fn start(serial: Serial1) -&gt; Transfer&lt;[u8; 16]&gt; {
+    // array allocated in this frame
+    let buffer = [0; 16];
+
+    serial.read_exact(buffer)
+}
+
+#[inline(never)]
+fn bar() {
+    // stack variables
+    let mut x = 0;
+    let mut y = 0;
+
+    // use `x` and `y`
+}
+<span class="boring">}</span></code></pre></pre>
+<p><code>read_exact</code> 操作将使用位于 <code>start</code> 函数的 <code>buffer</code> 的地址。当 <code>start</code> 返回时，局部的 <code>buffer</code> 将会被释放，在 <code>read_exact</code> 中使用的指针将会变得无效化。你最后会遇到与 <a href="dma.html#dealing-with-memforget"><code>unsound</code></a> 案例中一样的情况。</p>
+<p>为了避免这个问题，我们要求我们的API使用的缓存即使当它被移动时依然保有它的内存区域。<a href="https://doc.rust-lang.org/nightly/std/pin/index.html"><code>Pin</code></a> 类型提供这样的保障。首先我们可以更新我们的API以要求所有的缓存都是 &quot;pinned&quot; 的。</p>
+<blockquote>
+<p><strong>注意：</strong> 要编译下面的所有程序，你的Rust需要 
+<code>&gt;=1.33.0</code>。写这本书的时候 (2019-01-04) 这意味着要使用 nightly
+版的Rust</p>
+</blockquote>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A DMA transfer
+pub struct Transfer&lt;B&gt; {
+    // NOTE: changed
+    buffer: Pin&lt;B&gt;,
+    serial: Serial1,
+}
+
+impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn read_exact&lt;B&gt;(mut self, mut buffer: Pin&lt;B&gt;) -&gt; Transfer&lt;B&gt;
+    where
+        // NOTE: bounds changed
+        B: DerefMut,
+        B::Target: AsMutSlice&lt;Element = u8&gt; + Unpin,
+    {
+        // .. same as before ..
+    }
+
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn write_all&lt;B&gt;(mut self, buffer: Pin&lt;B&gt;) -&gt; Transfer&lt;B&gt;
+    where
+        // NOTE: bounds changed
+        B: Deref,
+        B::Target: AsSlice&lt;Element = u8&gt;,
+    {
+        // .. same as before ..
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<blockquote>
+<p><strong>注意：</strong> 我们可以使用 <a href="https://crates.io/crates/stable_deref_trait"><code>StableDeref</code></a> 特质而不是 <code>Pin</code>
+newtype but opted for <code>Pin</code> since it's provided in the standard library.</p>
+</blockquote>
+<p>With this new API we can use <code>&amp;'static mut</code> references, <code>Box</code>-ed slices, <code>Rc</code>-ed
+slices, etc.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn static_mut(serial: Serial1, buf: &amp;'static mut [u8]) {
+    let buf = Pin::new(buf);
+
+    let t = serial.read_exact(buf);
+
+    // ..
+
+    let (buf, serial) = t.wait();
+
+    // ..
+}
+
+fn boxed(serial: Serial1, buf: Box&lt;[u8]&gt;) {
+    let buf = Pin::new(buf);
+
+    let t = serial.read_exact(buf);
+
+    // ..
+
+    let (buf, serial) = t.wait();
+
+    // ..
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="static-bound"><a class="header" href="#static-bound"><code>'static</code> bound</a></h2>
+<p>Does pinning let us safely use stack allocated arrays? The answer is <em>no</em>.
+Consider the following example.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn unsound(serial: Serial1) {
+    start(serial);
+
+    bar();
+}
+
+// pin-utils = &quot;0.1.0-alpha.4&quot;
+use pin_utils::pin_mut;
+
+#[inline(never)]
+fn start(serial: Serial1) {
+    let buffer = [0; 16];
+
+    // pin the `buffer` to this stack frame
+    // `buffer` now has type `Pin&lt;&amp;mut [u8; 16]&gt;`
+    pin_mut!(buffer);
+
+    mem::forget(serial.read_exact(buffer));
+}
+
+#[inline(never)]
+fn bar() {
+    // stack variables
+    let mut x = 0;
+    let mut y = 0;
+
+    // use `x` and `y`
+}
+<span class="boring">}</span></code></pre></pre>
+<p>As seen many times before, the above program runs into undefined behavior due to
+stack frame corruption.</p>
+<p>The API is unsound for buffers of type <code>Pin&lt;&amp;'a mut [u8]&gt;</code> where <code>'a</code> is <em>not</em>
+<code>'static</code>. To prevent the problem we have to add a <code>'static</code> bound in some
+places.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn read_exact&lt;B&gt;(mut self, mut buffer: Pin&lt;B&gt;) -&gt; Transfer&lt;B&gt;
+    where
+        // NOTE: added 'static bound
+        B: DerefMut + 'static,
+        B::Target: AsMutSlice&lt;Element = u8&gt; + Unpin,
+    {
+        // .. same as before ..
+    }
+
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn write_all&lt;B&gt;(mut self, buffer: Pin&lt;B&gt;) -&gt; Transfer&lt;B&gt;
+    where
+        // NOTE: added 'static bound
+        B: Deref + 'static,
+        B::Target: AsSlice&lt;Element = u8&gt;,
+    {
+        // .. same as before ..
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>现在有问题的程序将被拒绝。</p>
+<h2 id="析构函数"><a class="header" href="#析构函数">析构函数</a></h2>
+<p>Now that the API accepts <code>Box</code>-es and other types that have destructors we need
+to decide what to do when <code>Transfer</code> is early-dropped.</p>
+<p>Normally, <code>Transfer</code> values are consumed using the <code>wait</code> method but it's also
+possible to, implicitly or explicitly, <code>drop</code> the value before the transfer is
+over. For example, dropping a <code>Transfer&lt;Box&lt;[u8]&gt;&gt;</code> value will cause the buffer
+to be deallocated. This can result in undefined behavior if the transfer is
+still in progress as the DMA would end up writing to deallocated memory.</p>
+<p>In such scenario one option is to make <code>Transfer.drop</code> stop the DMA transfer.
+The other option is to make <code>Transfer.drop</code> wait for the transfer to finish.
+We'll pick the former option as it's cheaper.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A DMA transfer
+pub struct Transfer&lt;B&gt; {
+    // NOTE: always `Some` variant
+    inner: Option&lt;Inner&lt;B&gt;&gt;,
+}
+
+// NOTE: previously named `Transfer&lt;B&gt;`
+struct Inner&lt;B&gt; {
+    buffer: Pin&lt;B&gt;,
+    serial: Serial1,
+}
+
+impl&lt;B&gt; Transfer&lt;B&gt; {
+    /// Blocks until the transfer is done and returns the buffer
+    pub fn wait(mut self) -&gt; (Pin&lt;B&gt;, Serial1) {
+        while !self.is_done() {}
+
+        atomic::compiler_fence(Ordering::Acquire);
+
+        let inner = self
+            .inner
+            .take()
+            .unwrap_or_else(|| unsafe { hint::unreachable_unchecked() });
+        (inner.buffer, inner.serial)
+    }
+}
+
+impl&lt;B&gt; Drop for Transfer&lt;B&gt; {
+    fn drop(&amp;mut self) {
+        if let Some(inner) = self.inner.as_mut() {
+            // NOTE: this is a volatile write
+            inner.serial.dma.stop();
+
+            // we need a read here to make the Acquire fence effective
+            // we do *not* need this if `dma.stop` does a RMW operation
+            unsafe {
+                ptr::read_volatile(&amp;0);
+            }
+
+            // we need a fence here for the same reason we need one in `Transfer.wait`
+            atomic::compiler_fence(Ordering::Acquire);
+        }
+    }
+}
+
+impl Serial1 {
+    /// Receives data into the given `buffer` until it's filled
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn read_exact&lt;B&gt;(mut self, mut buffer: Pin&lt;B&gt;) -&gt; Transfer&lt;B&gt;
+    where
+        B: DerefMut + 'static,
+        B::Target: AsMutSlice&lt;Element = u8&gt; + Unpin,
+    {
+        // .. same as before ..
+
+        Transfer {
+            inner: Some(Inner {
+                buffer,
+                serial: self,
+            }),
+        }
+    }
+
+    /// Sends out the given `buffer`
+    ///
+    /// Returns a value that represents the in-progress DMA transfer
+    pub fn write_all&lt;B&gt;(mut self, buffer: Pin&lt;B&gt;) -&gt; Transfer&lt;B&gt;
+    where
+        B: Deref + 'static,
+        B::Target: AsSlice&lt;Element = u8&gt;,
+    {
+        // .. same as before ..
+
+        Transfer {
+            inner: Some(Inner {
+                buffer,
+                serial: self,
+            }),
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Now the DMA transfer will be stopped before the buffer is deallocated.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn reuse(serial: Serial1) {
+    let buf = Pin::new(Box::new([0; 16]));
+
+    let t = serial.read_exact(buf); // compiler_fence(Ordering::Release) ▲
+
+    // ..
+
+    // this stops the DMA transfer and frees memory
+    mem::drop(t); // compiler_fence(Ordering::Acquire) ▼
+
+    // this likely reuses the previous memory allocation
+    let mut buf = Box::new([0; 16]);
+
+    // .. do stuff with `buf` ..
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="总结"><a class="header" href="#总结">总结</a></h2>
+<p>To sum it up, we need to consider all the following points to achieve  memory
+safe DMA transfers:</p>
+<ul>
+<li>
+<p>Use immovable buffers plus indirection: <code>Pin&lt;B&gt;</code>. Alternatively, you can use
+the <code>StableDeref</code> trait.</p>
+</li>
+<li>
+<p>The ownership of the buffer must be passed to the DMA : <code>B: 'static</code>.</p>
+</li>
+<li>
+<p>Do <em>not</em> rely on destructors running for memory safety. Consider what happens
+if <code>mem::forget</code> is used with your API.</p>
+</li>
+<li>
+<p><em>Do</em> add a custom destructor that stops the DMA transfer, or waits for it to
+finish. Consider what happens if <code>mem::drop</code> is used with your API.</p>
+</li>
+</ul>
+<hr />
+<p>This text leaves out up several details required to build a production grade
+DMA abstraction, like configuring the DMA channels (e.g. streams, circular vs
+one-shot mode, etc.), alignment of buffers, error handling, how to make the
+abstraction device-agnostic, etc. All those aspects are left as an exercise for
+the reader / community (<code>:P</code>).
+Overlapping use</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="与编译器支持有关的笔记"><a class="header" href="#与编译器支持有关的笔记">与编译器支持有关的笔记</a></h1>
+<p>这本书使用了一个内置的<em>编译器</em>目标，<code>thumbv7m-none-eabi</code>，Rust团队为其分发了一个 <code>rust-std</code> 组件，<code>rust-std</code> 是跟 <a href="https://doc.rust-lang.org/core/index.html"><code>core</code></a> 和 <a href="https://doc.rust-lang.org/std/index.html"><code>std</code></a> 一样的预先编译好的crates的集合。</p>
+<p>如果你想尝试为一个不同的目标架构复制这本书的内容，你需要考虑下Rust为(编译)目标所提供的支持在什么级别。</p>
+<h2 id="llvm-支持"><a class="header" href="#llvm-支持">LLVM 支持</a></h2>
+<p>自Rust 1.28以来，官方的Rust编译器，<code>rustc</code>，使用LLVM生成(机器)代码。Rust对某个架构提供的最小级别的支持是在<code>rustc</code>中让它的LLVM后端可用。通过运行下面的命令，你可以看到所有的 <code>rustc</code> 通过LLVM支持的架构:</p>
+<pre><code class="language-console">$ # 运行这个命令，你需要安装`cargo-binutils`
+$ cargo objdump -- -version
+LLVM (http://llvm.org/):
+  LLVM version 7.0.0svn
+  Optimized build.
+  Default target: x86_64-unknown-linux-gnu
+  Host CPU: skylake
+
+  Registered Targets:
+    aarch64    - AArch64 (little endian)
+    aarch64_be - AArch64 (big endian)
+    arm        - ARM
+    arm64      - ARM64 (little endian)
+    armeb      - ARM (big endian)
+    hexagon    - Hexagon
+    mips       - Mips
+    mips64     - Mips64 [experimental]
+    mips64el   - Mips64el [experimental]
+    mipsel     - Mipsel
+    msp430     - MSP430 [experimental]
+    nvptx      - NVIDIA PTX 32-bit
+    nvptx64    - NVIDIA PTX 64-bit
+    ppc32      - PowerPC 32
+    ppc64      - PowerPC 64
+    ppc64le    - PowerPC 64 LE
+    sparc      - Sparc
+    sparcel    - Sparc LE
+    sparcv9    - Sparc V9
+    systemz    - SystemZ
+    thumb      - Thumb
+    thumbeb    - Thumb (big endian)
+    wasm32     - WebAssembly 32-bit
+    wasm64     - WebAssembly 64-bit
+    x86        - 32-bit X86: Pentium-Pro and above
+    x86-64     - 64-bit X86: EM64T and AMD64
+</code></pre>
+<p>如果LLVM支持了你感兴趣的架构，但是构建的<code>rustc</code>没有使能其后端(自Rust 1.28以来AVR就是这样的情况)，那么你将需要修改Rust源码以启用它。PR <a href="https://github.com/rust-lang/rust/pull/52787">rust-lang/rust#52787</a> 的前两个commits能让你知道需要做的改变。</p>
+<p>换句话说，如果LLVM不支持这个架构，但是LLVM的一个分支支持，在编译<code>rustc</code>之前你将需要使用这个分支替代原来的LLVM 。Rust编译系统允许这么做且理论上，它应该只需要修改<code>llvm</code>的子模组让它指向那个分支就可以了。</p>
+<p>如果只有一些供应商提供的GCC支持你的目标架构，你可以选择使用<a href="https://github.com/thepowersgang/mrustc"><code>mrustc</code></a>，一个非官方的Rust编译器，去把你的Rust程序翻译成C代码然后使用GCC编译它。</p>
+<h2 id="内置的目标"><a class="header" href="#内置的目标">内置的目标</a></h2>
+<p>一个编译目标不仅是它的架构。每个目标都有一个与它关联的<a href="https://github.com/rust-lang/rfcs/blob/master/text/0131-target-specification.md">规范</a>，其中描述了它的架构，它的操作系统和默认的链接器。</p>
+<p>Rust编译器知道几个目标。这些被<em>内置进</em>编译器里且可以通过下列的命令被列出来:</p>
+<pre><code class="language-console">$ rustc --print target-list | column
+aarch64-fuchsia                   mipsisa32r6el-unknown-linux-gnu
+aarch64-linux-android             mipsisa64r6-unknown-linux-gnuabi64
+aarch64-pc-windows-msvc           mipsisa64r6el-unknown-linux-gnuabi64
+aarch64-unknown-cloudabi          msp430-none-elf
+aarch64-unknown-freebsd           nvptx64-nvidia-cuda
+aarch64-unknown-hermit            powerpc-unknown-linux-gnu
+aarch64-unknown-linux-gnu         powerpc-unknown-linux-gnuspe
+aarch64-unknown-linux-musl        powerpc-unknown-linux-musl
+aarch64-unknown-netbsd            powerpc-unknown-netbsd
+aarch64-unknown-none              powerpc-wrs-vxworks
+aarch64-unknown-none-softfloat    powerpc-wrs-vxworks-spe
+aarch64-unknown-openbsd           powerpc64-unknown-freebsd
+aarch64-unknown-redox             powerpc64-unknown-linux-gnu
+aarch64-uwp-windows-msvc          powerpc64-unknown-linux-musl
+aarch64-wrs-vxworks               powerpc64-wrs-vxworks
+arm-linux-androideabi             powerpc64le-unknown-linux-gnu
+arm-unknown-linux-gnueabi         powerpc64le-unknown-linux-musl
+arm-unknown-linux-gnueabihf       riscv32i-unknown-none-elf
+arm-unknown-linux-musleabi        riscv32imac-unknown-none-elf
+arm-unknown-linux-musleabihf      riscv32imc-unknown-none-elf
+armebv7r-none-eabi                riscv64gc-unknown-linux-gnu
+armebv7r-none-eabihf              riscv64gc-unknown-none-elf
+armv4t-unknown-linux-gnueabi      riscv64imac-unknown-none-elf
+armv5te-unknown-linux-gnueabi     s390x-unknown-linux-gnu
+armv5te-unknown-linux-musleabi    sparc-unknown-linux-gnu
+armv6-unknown-freebsd             sparc64-unknown-linux-gnu
+armv6-unknown-netbsd-eabihf       sparc64-unknown-netbsd
+armv7-linux-androideabi           sparc64-unknown-openbsd
+armv7-unknown-cloudabi-eabihf     sparcv9-sun-solaris
+armv7-unknown-freebsd             thumbv6m-none-eabi
+armv7-unknown-linux-gnueabi       thumbv7a-pc-windows-msvc
+armv7-unknown-linux-gnueabihf     thumbv7em-none-eabi
+armv7-unknown-linux-musleabi      thumbv7em-none-eabihf
+armv7-unknown-linux-musleabihf    thumbv7m-none-eabi
+armv7-unknown-netbsd-eabihf       thumbv7neon-linux-androideabi
+armv7-wrs-vxworks-eabihf          thumbv7neon-unknown-linux-gnueabihf
+armv7a-none-eabi                  thumbv7neon-unknown-linux-musleabihf
+armv7a-none-eabihf                thumbv8m.base-none-eabi
+armv7r-none-eabi                  thumbv8m.main-none-eabi
+armv7r-none-eabihf                thumbv8m.main-none-eabihf
+asmjs-unknown-emscripten          wasm32-unknown-emscripten
+hexagon-unknown-linux-musl        wasm32-unknown-unknown
+i586-pc-windows-msvc              wasm32-wasi
+i586-unknown-linux-gnu            x86_64-apple-darwin
+i586-unknown-linux-musl           x86_64-fortanix-unknown-sgx
+i686-apple-darwin                 x86_64-fuchsia
+i686-linux-android                x86_64-linux-android
+i686-pc-windows-gnu               x86_64-linux-kernel
+i686-pc-windows-msvc              x86_64-pc-solaris
+i686-unknown-cloudabi             x86_64-pc-windows-gnu
+i686-unknown-freebsd              x86_64-pc-windows-msvc
+i686-unknown-haiku                x86_64-rumprun-netbsd
+i686-unknown-linux-gnu            x86_64-sun-solaris
+i686-unknown-linux-musl           x86_64-unknown-cloudabi
+i686-unknown-netbsd               x86_64-unknown-dragonfly
+i686-unknown-openbsd              x86_64-unknown-freebsd
+i686-unknown-uefi                 x86_64-unknown-haiku
+i686-uwp-windows-gnu              x86_64-unknown-hermit
+i686-uwp-windows-msvc             x86_64-unknown-hermit-kernel
+i686-wrs-vxworks                  x86_64-unknown-illumos
+mips-unknown-linux-gnu            x86_64-unknown-l4re-uclibc
+mips-unknown-linux-musl           x86_64-unknown-linux-gnu
+mips-unknown-linux-uclibc         x86_64-unknown-linux-gnux32
+mips64-unknown-linux-gnuabi64     x86_64-unknown-linux-musl
+mips64-unknown-linux-muslabi64    x86_64-unknown-netbsd
+mips64el-unknown-linux-gnuabi64   x86_64-unknown-openbsd
+mips64el-unknown-linux-muslabi64  x86_64-unknown-redox
+mipsel-unknown-linux-gnu          x86_64-unknown-uefi
+mipsel-unknown-linux-musl         x86_64-uwp-windows-gnu
+mipsel-unknown-linux-uclibc       x86_64-uwp-windows-msvc
+mipsisa32r6-unknown-linux-gnu     x86_64-wrs-vxworks
+</code></pre>
+<p>使用下列的命令你可以打印出某个目标的规范:</p>
+<pre><code class="language-console">$ rustc +nightly -Z unstable-options --print target-spec-json --target thumbv7m-none-eabi
+{
+  &quot;abi-blacklist&quot;: [
+    &quot;stdcall&quot;,
+    &quot;fastcall&quot;,
+    &quot;vectorcall&quot;,
+    &quot;thiscall&quot;,
+    &quot;win64&quot;,
+    &quot;sysv64&quot;
+  ],
+  &quot;arch&quot;: &quot;arm&quot;,
+  &quot;data-layout&quot;: &quot;e-m:e-p:32:32-i64:64-v128:64:128-a:0:32-n32-S64&quot;,
+  &quot;emit-debug-gdb-scripts&quot;: false,
+  &quot;env&quot;: &quot;&quot;,
+  &quot;executables&quot;: true,
+  &quot;is-builtin&quot;: true,
+  &quot;linker&quot;: &quot;arm-none-eabi-gcc&quot;,
+  &quot;linker-flavor&quot;: &quot;gcc&quot;,
+  &quot;llvm-target&quot;: &quot;thumbv7m-none-eabi&quot;,
+  &quot;max-atomic-width&quot;: 32,
+  &quot;os&quot;: &quot;none&quot;,
+  &quot;panic-strategy&quot;: &quot;abort&quot;,
+  &quot;relocation-model&quot;: &quot;static&quot;,
+  &quot;target-c-int-width&quot;: &quot;32&quot;,
+  &quot;target-endian&quot;: &quot;little&quot;,
+  &quot;target-pointer-width&quot;: &quot;32&quot;,
+  &quot;vendor&quot;: &quot;&quot;
+}
+</code></pre>
+<p>如果这些内置的目标都不适合你的目标系统，你将必须通过使用JSON格式编写你自己的目标规范来生成一个自制的目标，在<a href="./custom-target.html">下个章节</a>中会讲到。</p>
+<h2 id="rust-std-组件"><a class="header" href="#rust-std-组件"><code>rust-std</code> 组件</a></h2>
+<p>Rust团队通过<code>rustup</code>为某些内置的目标分发<code>rust-std</code>组件。这个组件是跟 <a href="https://doc.rust-lang.org/core/index.html"><code>core</code></a> 和 <a href="https://doc.rust-lang.org/std/index.html"><code>std</code></a> 一样的预先编译好的crates的集合，它要求交叉编译。</p>
+<p>通过运行下列的命令，你可以找到具有一个<code>rust-std</code>组件的目标列表:</p>
+<pre><code class="language-console">$ rustup target list | column
+aarch64-apple-ios                       mipsel-unknown-linux-musl
+aarch64-fuchsia                         nvptx64-nvidia-cuda
+aarch64-linux-android                   powerpc-unknown-linux-gnu
+aarch64-pc-windows-msvc                 powerpc64-unknown-linux-gnu
+aarch64-unknown-linux-gnu               powerpc64le-unknown-linux-gnu
+aarch64-unknown-linux-musl              riscv32i-unknown-none-elf
+aarch64-unknown-none                    riscv32imac-unknown-none-elf
+aarch64-unknown-none-softfloat          riscv32imc-unknown-none-elf
+arm-linux-androideabi                   riscv64gc-unknown-linux-gnu
+arm-unknown-linux-gnueabi               riscv64gc-unknown-none-elf
+arm-unknown-linux-gnueabihf             riscv64imac-unknown-none-elf
+arm-unknown-linux-musleabi              s390x-unknown-linux-gnu
+arm-unknown-linux-musleabihf            sparc64-unknown-linux-gnu
+armebv7r-none-eabi                      sparcv9-sun-solaris
+armebv7r-none-eabihf                    thumbv6m-none-eabi
+armv5te-unknown-linux-gnueabi           thumbv7em-none-eabi
+armv5te-unknown-linux-musleabi          thumbv7em-none-eabihf
+armv7-linux-androideabi                 thumbv7m-none-eabi
+armv7-unknown-linux-gnueabi             thumbv7neon-linux-androideabi
+armv7-unknown-linux-gnueabihf           thumbv7neon-unknown-linux-gnueabihf
+armv7-unknown-linux-musleabi            thumbv8m.base-none-eabi
+armv7-unknown-linux-musleabihf          thumbv8m.main-none-eabi
+armv7a-none-eabi                        thumbv8m.main-none-eabihf
+armv7r-none-eabi                        wasm32-unknown-emscripten
+armv7r-none-eabihf                      wasm32-unknown-unknown
+asmjs-unknown-emscripten                wasm32-wasi
+i586-pc-windows-msvc                    x86_64-apple-darwin
+i586-unknown-linux-gnu                  x86_64-apple-ios
+i586-unknown-linux-musl                 x86_64-fortanix-unknown-sgx
+i686-linux-android                      x86_64-fuchsia
+i686-pc-windows-gnu                     x86_64-linux-android
+i686-pc-windows-msvc                    x86_64-pc-windows-gnu
+i686-unknown-freebsd                    x86_64-pc-windows-msvc
+i686-unknown-linux-gnu                  x86_64-rumprun-netbsd
+i686-unknown-linux-musl                 x86_64-sun-solaris
+mips-unknown-linux-gnu                  x86_64-unknown-cloudabi
+mips-unknown-linux-musl                 x86_64-unknown-freebsd
+mips64-unknown-linux-gnuabi64           x86_64-unknown-linux-gnu (default)
+mips64-unknown-linux-muslabi64          x86_64-unknown-linux-gnux32
+mips64el-unknown-linux-gnuabi64         x86_64-unknown-linux-musl
+mips64el-unknown-linux-muslabi64        x86_64-unknown-netbsd
+mipsel-unknown-linux-gnu                x86_64-unknown-redox
+</code></pre>
+<p>如果你的目标没有<code>rust-std</code>组件，或者你正在使用一个自制的目标，那么你必须要使用一个开发版的工具链去构建标准库。看下一页，关于<a href="./custom-target.html#use-the-target-file">构建自制目标</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="制造一个自定义的目标"><a class="header" href="#制造一个自定义的目标">制造一个自定义的目标</a></h1>
+<p>If a custom target triple is not available for your platform, you must create a custom target file
+that describes your target to rustc.</p>
+<p>Keep in mind that it is required to use a nightly compiler to build the core library, which must be
+done for a target unknown to rustc.</p>
+<h2 id="deciding-on-a-target-triple"><a class="header" href="#deciding-on-a-target-triple">Deciding on a target triple</a></h2>
+<p>Many targets already have a known triple used to describe them, typically in the form
+ARCH-VENDOR-SYS-ABI. You should aim to use the same triple that <a href="https://clang.llvm.org/docs/CrossCompilation.html#target-triple">LLVM uses</a>;
+however, it may differ if you need to specify additional information to Rust that LLVM does not know
+about. Although the triple is technically only for human use, it's important for it to be unique and
+descriptive especially if the target will be upstreamed in the future.</p>
+<p>The ARCH part is typically just the architecture name, except in the case of 32-bit ARM. For
+example, you would probably use x86_64 for those processors, but specify the exact ARM architecture
+version. Typical values might be <code>armv7</code>, <code>armv5te</code>, or <code>thumbv7neon</code>. Take a look at the names of
+the <a href="./compiler-support.html#built-in-target">built-in targets</a> for inspiration.</p>
+<p>The VENDOR part is optional and describes the manufacturer. Omitting this field is the same as
+using <code>unknown</code>.</p>
+<p>The SYS part describes the OS that is used. Typical values include <code>win32</code>, <code>linux</code>, and <code>darwin</code>
+for desktop platforms. <code>none</code> is used for bare-metal usage.</p>
+<p>The ABI part describes how the process starts up. <code>eabi</code> is used for bare metal, while <code>gnu</code> is used
+for glibc, <code>musl</code> for musl, etc.</p>
+<p>Now that you have a target triple, create a file with the name of the triple and a <code>.json</code>
+extension. For example, a file describing <code>armv7a-none-eabi</code> would have the filename
+<code>armv7a-none-eabi.json</code>.</p>
+<h2 id="fill-the-target-file"><a class="header" href="#fill-the-target-file">Fill the target file</a></h2>
+<p>The target file must be valid JSON. There are two places where its contents are described:
+<a href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/spec/struct.Target.html"><code>Target</code></a>, where every field is mandatory, and <a href="https://doc.rust-lang.org/nightly/nightly-rustc/rustc_target/spec/struct.TargetOptions.html"><code>TargetOptions</code></a>, where every field is optional.
+<strong>All underscores are replaced with hyphens</strong>.</p>
+<p>The recommended way is to base your target file on the specification of a built-in target that's
+similar to your target system, then tweak it to match the properties of your target system. To do
+so, use the command
+<code>rustc +nightly -Z unstable-options --print target-spec-json --target $SOME_SIMILAR_TARGET</code>, using
+<a href="./compiler-support.html#built-in-target">a target that's already built into the compiler</a>.</p>
+<p>You can pretty much copy that output into your file. Start with a few modifications:</p>
+<ul>
+<li>Remove <code>&quot;is-builtin&quot;: true</code></li>
+<li>Fill <code>llvm-target</code> with <a href="https://clang.llvm.org/docs/CrossCompilation.html#target-triple">the triple that LLVM expects</a></li>
+<li>Decide on a panicking strategy. A bare metal implementation will likely use
+<code>&quot;panic-strategy&quot;: &quot;abort&quot;</code>. If you decide not to <code>abort</code> on panicking, unless you <a href="./smallest-no-std.html#eh_personality">tell Cargo
+to</a> per-project, you must define an <a href="./smallest-no-std.html#eh_personality">eh_personality</a> function.</li>
+<li>Configure atomics. Pick the first option that describes your target:
+<ul>
+<li>I have a single-core processor, no threads, <a href="https://github.com/rust-lang/rust/issues/58500#issuecomment-654341233"><strong>no interrupts</strong></a>, or any way for
+multiple things to be happening in parallel: if you are <strong>sure</strong> that is the case, such as WASM
+(for now), you may set <code>&quot;singlethread&quot;: true</code>. This will configure LLVM to convert all atomic
+operations to use their single threaded counterparts. Incorrectly using this option may result
+in UB if using threads or interrupts.</li>
+<li>I have native atomic operations: set <code>max-atomic-width</code> to the biggest type in bits that your
+target can operate on atomically. For example, many ARM cores have 32-bit atomic operations. You
+may set <code>&quot;max-atomic-width&quot;: 32</code> in that case.</li>
+<li>I have no native atomic operations, but I can emulate them myself: set <code>max-atomic-width</code> to the
+highest number of bits that you can emulate up to 128, then implement all of the
+<a href="http://llvm.org/docs/Atomics.html#libcalls-atomic">atomic</a> and <a href="http://llvm.org/docs/Atomics.html#libcalls-sync">sync</a> functions expected by LLVM as
+<code>#[no_mangle] unsafe extern &quot;C&quot;</code>. These functions have been standardized by gcc, so the <a href="https://gcc.gnu.org/onlinedocs/gcc/_005f_005fsync-Builtins.html">gcc
+documentation</a> may have more notes. Missing functions will cause a linker error, while
+incorrectly implemented functions will possibly cause UB. For example, if you have a
+single-core, single-thread processor with interrupts, you can implement these functions to
+disable interrupts, perform the regular operation, and then re-enable them.</li>
+<li>I have no native atomic operations: you'll have to do some unsafe work to manually ensure
+synchronization in your code. You must set <code>&quot;max-atomic-width&quot;: 0</code>.</li>
+</ul>
+</li>
+<li>Change the linker if integrating with an existing toolchain. For example, if you're using a
+toolchain that uses a custom build of gcc, set <code>&quot;linker-flavor&quot;: &quot;gcc&quot;</code> and <code>linker</code> to the
+command name of your linker. If you require additional linker arguments, use <code>pre-link-args</code> and
+<code>post-link-args</code> as so:
+<pre><code class="language-json">&quot;pre-link-args&quot;: {
+    &quot;gcc&quot;: [
+        &quot;-Wl,--as-needed&quot;,
+        &quot;-Wl,-z,noexecstack&quot;,
+        &quot;-m64&quot;
+    ]
+},
+&quot;post-link-args&quot;: {
+    &quot;gcc&quot;: [
+        &quot;-Wl,--allow-multiple-definition&quot;,
+        &quot;-Wl,--start-group,-lc,-lm,-lgcc,-lstdc++,-lsupc++,--end-group&quot;
+    ]
+}
+</code></pre>
+Ensure that the linker type is the key within <code>link-args</code>.</li>
+<li>Configure LLVM features. Run <code>llc -march=ARCH -mattr=help</code> where ARCH is the base architecture
+(not including the version in the case of ARM) to list the available features and their
+descriptions. <strong>If your target requires strict memory alignment access (e.g. <code>armv5te</code>), make sure
+that you enable <code>strict-align</code></strong>. To enable a feature, place a plus before it. Likewise, to
+disable a feature, place a minus before it. Features should be comma separated like so:
+<code>&quot;features&quot;: &quot;+soft-float,+neon</code>. Note that this may not be necessary if LLVM knows enough about
+your target based on the provided triple and CPU.</li>
+<li>Configure the CPU that LLVM uses if you know it. This will enable CPU-specific optimizations and
+features. At the top of the output of the command in the last step, there is a list of known CPUs.
+If you know that you will be targeting a specific CPU, you may set it in the <code>cpu</code> field in the
+JSON target file.</li>
+</ul>
+<h2 id="使用目标文件"><a class="header" href="#使用目标文件">使用目标文件</a></h2>
+<p>一旦你有一个目标规范文件，你可能
+Once you have a target specification file, you may refer to it by its path or by its name (i.e.
+excluding <code>.json</code>) if it is in the current directory or in <code>$RUST_TARGET_PATH</code>.</p>
+<p>Verify that it is readable by rustc:</p>
+<pre><code class="language-sh">❱ rustc --print cfg --target foo.json # or just foo if in the current directory
+debug_assertions
+target_arch=&quot;arm&quot;
+target_endian=&quot;little&quot;
+target_env=&quot;&quot;
+target_feature=&quot;mclass&quot;
+target_feature=&quot;v7&quot;
+target_has_atomic=&quot;16&quot;
+target_has_atomic=&quot;32&quot;
+target_has_atomic=&quot;8&quot;
+target_has_atomic=&quot;cas&quot;
+target_has_atomic=&quot;ptr&quot;
+target_os=&quot;none&quot;
+target_pointer_width=&quot;32&quot;
+target_vendor=&quot;&quot;
+</code></pre>
+<p>Now, you finally get to use it! Many resources have been recommending <a href="https://github.com/japaric/xargo"><code>xargo</code></a> or <a href="https://github.com/rust-osdev/cargo-xbuild"><code>cargo-xbuild</code></a>.
+However, its successor, cargo's <code>build-std</code> feature, has received a lot of work recently and has
+quickly reached feature parity with the other options. As such, this guide will only cover that
+option.</p>
+<p>Start with a bare minimum <a href="./smallest-no-std.html"><code>no_std</code> program</a>. Now, run
+<code>cargo build -Z build-std=core --target foo.json</code>, again using the above rules about referencing the
+path. Hopefully, you should now have a binary in the target directory.</p>
+<p>You may optionally configure cargo to always use your target. See the recommendations at the end of
+the page about <a href="./smallest-no-std.html">the smallest <code>no_std</code> program</a>. However, you'll currently have to
+use the flag <code>-Z build-std=core</code> as that option is unstable.</p>
+<h3 id="build-additional-built-in-crates"><a class="header" href="#build-additional-built-in-crates">Build additional built-in crates</a></h3>
+<p>When using cargo's <code>build-std</code> feature, you can choose which crates to compile in. By default, when
+only passing <code>-Z build-std</code>, <code>std</code>, <code>core</code>, and <code>alloc</code> are compiled. However, you may want to
+exclude <code>std</code> when compiling for bare-metal. To do so, specify the crated you'd like after
+<code>build-std</code>. For example, to include <code>core</code> and <code>alloc</code>, pass <code>-Z build-std=core,alloc</code>.</p>
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
+<h3 id="language-item-required-but-not-found-eh_personality"><a class="header" href="#language-item-required-but-not-found-eh_personality">language item required, but not found: <code>eh_personality</code></a></h3>
+<p>Either add <code>&quot;panic-strategy&quot;: &quot;abort&quot;</code> to your target file, or define an <a href="./smallest-no-std.html#eh_personality">eh_personality</a> function.
+Alternatively, <a href="./smallest-no-std.html#eh_personality">tell Cargo to ignore it</a>.</p>
+<h3 id="undefined-reference-to-__sync_val_compare_and_swap_"><a class="header" href="#undefined-reference-to-__sync_val_compare_and_swap_">undefined reference to <code>__sync_val_compare_and_swap_#</code></a></h3>
+<p>Rust thinks that your target has atomic instructions, but LLVM doesn't. Go back to the step about
+<a href="custom-target.html#fill-the-target-file">configuring atomics</a>. You will need to reduce the number in <code>max-atomic-width</code>.
+See <a href="https://github.com/rust-lang/rust/issues/58500">#58500</a> for more details.</p>
+<h3 id="could-not-find-sync-in-alloc"><a class="header" href="#could-not-find-sync-in-alloc">could not find <code>sync</code> in <code>alloc</code></a></h3>
+<p>Similar to the above case, Rust doesn't think that you have atomics. You must implement them
+yourself or <a href="custom-target.html#fill-the-target-file">tell Rust that you have atomic instructions</a>.</p>
+<h3 id="multiple-definition-of-__something"><a class="header" href="#multiple-definition-of-__something">multiple definition of <code>__(something)</code></a></h3>
+<p>You're likely linking your Rust program with code built from another language, and the other
+language includes compiler built-ins that Rust also creates. To fix this, you'll need to tell your
+linker to allow multiple definitions. If using gcc, you may add:</p>
+<pre><code class="language-json">&quot;post-link-args&quot;: {
+    &quot;gcc&quot;: [
+        &quot;-Wl,--allow-multiple-definition&quot;
+    ]
+}
+</code></pre>
+<h3 id="error-adding-symbols-file-format-not-recognized"><a class="header" href="#error-adding-symbols-file-format-not-recognized">error adding symbols: file format not recognized</a></h3>
+<p>Switch to cargo's <code>build-std</code> feature and update your compiler. This <a href="https://github.com/rust-lang/cargo/issues/8239">was a bug</a> introduced
+for a few compiler builds that tried to pass in internal Rust object to an external linker.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>

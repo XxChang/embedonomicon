@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>最简的 #![no_std] 程序 - The Embedonomicon</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="preface.html">前言</a></li><li class="chapter-item expanded "><a href="smallest-no-std.html" class="active"><strong aria-hidden="true">1.</strong> 最简的 #![no_std] 程序</a></li><li class="chapter-item expanded "><a href="memory-layout.html"><strong aria-hidden="true">2.</strong> 存储布局</a></li><li class="chapter-item expanded "><a href="main.html"><strong aria-hidden="true">3.</strong> 一个 main 接口</a></li><li class="chapter-item expanded "><a href="exceptions.html"><strong aria-hidden="true">4.</strong> 异常处理</a></li><li class="chapter-item expanded "><a href="asm.html"><strong aria-hidden="true">5.</strong> 稳定的汇编</a></li><li class="chapter-item expanded "><a href="logging.html"><strong aria-hidden="true">6.</strong> 使用符号做日志</a></li><li class="chapter-item expanded "><a href="singleton.html"><strong aria-hidden="true">7.</strong> 全局单例</a></li><li class="chapter-item expanded "><a href="dma.html"><strong aria-hidden="true">8.</strong> DMA</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="compiler-support.html">与编译器支持有关的笔记</a></li><li class="chapter-item expanded affix "><a href="custom-target.html">制造一个自定义目标</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Embedonomicon</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="最简的-no_std-程序"><a class="header" href="#最简的-no_std-程序">最简的 <code>#![no_std]</code> 程序</a></h1>
+<p>在这部分，我们将写一个可以<em>编译</em>的最简的 <code>#![no_std]</code> 程序。</p>
+<h2 id="no_std-是什么意思"><a class="header" href="#no_std-是什么意思"><code>#![no_std]</code> 是什么意思?</a></h2>
+<p><code>#![no_std]</code> 是一个crate层级的属性，其指出crate将链接到 <a href="https://doc.rust-lang.org/core/"><code>core</code></a> 而不是 <a href="https://doc.rust-lang.org/std/"><code>std</code></a> crate，然而这对应用来说意味着什么呢?</p>
+<p><code>std</code> crate 是Rust的标准库。它包含的功能需要假设程序将运行在一个操作系统上而不是[<em>直接运行在裸机</em>]上。<code>std</code> 也假设操作系统是一个通用的操作系统，像那些会在服务器和桌面看到的系统。如此，<code>std</code> 在那些经常能在操作系统中遇到的功能：线程，文件，套接字，一个文件系统，进程，等等之上，提供了一个标准的API 。</p>
+<p>换句话说，<code>core</code> crate是<code>std</code> crate的一个子集，其不对将运行程序的系统做任何假设。它提供与语言的基本类型，像是浮点数，字符串和切片有关的APIs，也提供像是原子操作和SIMD指令这样的与处理器相关的APIs 。然而它缺少涉及到堆内存分配和I/O有关的APIs。</p>
+<p>对于一个应用来说，<code>std</code> 不仅仅只是提供一种方法访问OS抽象。<code>std</code> 在某些情况下，也提供栈溢出保护，处理命令行参数，在一个程序的<code>main</code>函数被启动前打开主线程。一个 <code>#![no_std]</code> 应用缺少上述的所有运行时，因此应用必须在需要的时候初始化它自己的运行时。</p>
+<p>由于这些特点，一个 <code>#![no_std]</code> 应用可以成为第一个或者是唯一一个运行在一个系统上的代码。它可以成为许多标准Rust应用无法成为的东西，比如:</p>
+<ul>
+<li>一个操作系统的内核。</li>
+<li>固件。</li>
+<li>一个启动引导。</li>
+</ul>
+<h2 id="代码"><a class="header" href="#代码">代码</a></h2>
+<p>讲完了，我们可以转向最小的 <code>#![no_std]</code> 程序了:</p>
+<pre><code class="language-console">$ cargo new --edition 2018 --bin app
+
+$ cd app
+</code></pre>
+<pre><code class="language-console">$ # 把 main.rs 改成这些内容
+$ cat src/main.rs
+</code></pre>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![no_main]
+#![no_std]
+
+<span class="boring">fn main() {
+</span>use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(_panic: &amp;PanicInfo&lt;'_&gt;) -&gt; ! {
+    loop {}
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这个程序含有一些在标准的Rust程序中不会出现的东西:</p>
+<p><code>#![no_std]</code> 属性，我们已经讲过了。</p>
+<p><code>#![no_main]</code> 属性，它意味着程序将不会使用标准的 <code>main</code> 函数作为入口。在写这本书的时候，Rust的 <code>main</code> 接口对程序执行的环境做了一些假设: 比如，它假设存在命令行参数，因此，通常它不适合 <code>#![no_std]</code> 程序。 </p>
+<p><code>#[panic_handler]</code> 属性。用这个属性标记的函数定义了恐慌的行为，包括库层级的恐慌(<code>core::painc!</code>)和语言层级的恐慌(越界索引)。</p>
+<p>这个程序不产生任何有用的东西。事实上，它将产生一个空的二进制项。</p>
+<pre><code class="language-console">$ # 等于 `size target/thumbv7m-none-eabi/debug/app`
+$ cargo size --target thumbv7m-none-eabi --bin app
+</code></pre>
+<pre><code class="language-text">   text	   data	    bss	    dec	    hex	filename
+      0	      0	      0	      0	      0	app
+</code></pre>
+<p>在链接之前，crate 包含了恐慌函数的符号。</p>
+<pre><code class="language-console">$ cargo rustc --target thumbv7m-none-eabi -- --emit=obj
+
+$ cargo nm -- target/thumbv7m-none-eabi/debug/deps/app-*.o | grep '[0-9]* [^N] '
+</code></pre>
+<pre><code class="language-text">00000000 T rust_begin_unwind
+</code></pre>
+<p>不过，它是我们的起点。在下一个部分，我们将搭建一些有用的东西。但是在继续之前，让我们设置一个默认的编译目标避免每次调用Cargo不得不传递<code>--target</code>标志。</p>
+<pre><code class="language-console">$ mkdir .cargo
+
+$ # 把 .cargo/config 改成这些内容
+$ cat .cargo/config
+</code></pre>
+<pre><code class="language-toml">[build]
+target = &quot;thumbv7m-none-eabi&quot;
+</code></pre>
+<h2 id="eh_personality"><a class="header" href="#eh_personality">eh_personality</a></h2>
+<p>如果你配置的不是在恐慌时无条件终止(译者注：<code>panic = &quot;abort&quot;</code>)，大多数的有完整的操作系统的目标平台都不是(或者如果你的 <a href="./custom-target.html">客制目标平台</a> 不包含
+<code>&quot;panic-strategy&quot;: &quot;abort&quot;</code>)，那么你必须告诉Cargo要怎么做或者添加一个 <code>eh_personality</code> 函数，后者需要nightly版的编译器。<a href="https://doc.rust-lang.org/unstable-book/language-features/lang-items.html#more-about-the-language-items">这里是关于它的Rust文档</a>，
+<a href="https://www.reddit.com/r/rust/comments/estvau/til_why_the_eh_personality_language_item_is/">这里是一些关于它的讨论</a>.</p>
+<p>在 Cargo.toml 中， 添加:</p>
+<pre><code class="language-toml">[profile.dev]
+panic = &quot;abort&quot;
+
+[profile.release]
+panic = &quot;abort&quot;
+</code></pre>
+<p>或者，声明 <code>eh_personality</code> 函数。它很简单的没啥特别的，展开时和下面一样:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span>#![feature(lang_items)]
+
+<span class="boring">fn main() {
+</span>#[lang = &quot;eh_personality&quot;]
+extern &quot;C&quot; fn eh_personality() {}
+<span class="boring">}</span></code></pre></pre>
+<p>如果没有这么做，你将会收到这个错误 <code>language item required, but not found: 'eh_personality'</code> 。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="preface.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="memory-layout.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="preface.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="memory-layout.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
