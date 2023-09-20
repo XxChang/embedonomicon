@@ -91,7 +91,7 @@ $ cargo objdump --bin app --release -- -s -j .vector_table
 
 ## `.o` / `.a` 文件
 
-使用`cc` crate的缺点是它需要一些编译机器上的汇编器程序。比如当目标是ARM Cortex-M时，`cc` crate使用`arm-none-eabi-gcc`作为汇编器。
+使用`cc` crate的缺点是它需要编译机器上有对应的汇编器程序。比如当目标是ARM Cortex-M时，`cc` crate使用`arm-none-eabi-gcc`作为汇编器。
 
 我们可以用`rt` crate来搬运一个预先汇编好的文件而不用在编译机器上汇编文件。这方法不需要在编译机器上拥有汇编器程序。然而，打包和发布crate的机器上仍然需要一个汇编器。
 
@@ -163,4 +163,4 @@ $ cargo objdump --bin app --release -- -s -j .vector_table
 {{#include ../ci/asm/app2/release.vector_table}}
 ```
 
-搬运预先汇编好的归档文件的缺点是，在最糟糕的情况下，每个库所支持的编译目标都需要有一个build工件。
+搬运预先汇编好的归档文件的缺点是，在最糟糕的情况下，库所支持的每个编译目标都需要有一个build工件。

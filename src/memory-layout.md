@@ -12,7 +12,7 @@ Cortex-M 设备需要把[向量表]放在[代码区]的开始处。
 [代码区]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/memory-model
 [向量表]: https://developer.arm.com/docs/dui0552/latest/the-cortex-m3-processor/exception-model/vector-table
 
-链接器决定程序的最终存储布局，但是我们可以用[链接器脚本]对它进行一些控制。链接器提供的控制布局的精细度在*sections*层级。一个section是分布在连续存储中的*符号*的集合。符号，依次，可以是数据(一个静态变量)，或者指令(一个Rust函数)。
+链接器决定程序的最终存储布局，但是我们可以用[链接器脚本]对它进行一些控制。链接器提供的控制布局的精细度在*sections*层级。一个section是存储在连续的内存地址中的*符号*的集合。符号，依次，可以是数据(一个静态变量)，或者指令(一个Rust函数)。
 
 [链接器脚本]: https://sourceware.org/binutils/docs/ld/Scripts.html
 
@@ -32,13 +32,13 @@ Cortex-M 设备需要把[向量表]放在[代码区]的开始处。
 
 像上面提到的，对于Cortex-M设备，我们需要修改向量表的前两项。第一个，栈指针的初始值，只能使用链接器脚本修改。第二个，重置向量，需要在Rust代码中生成并使用链接器脚本放置到正确的地方。
 
-重置向量是一个指向重置处理函数的指针。重置处理函数是在一个系统重启后设备将会执行的函数，或者第一次上电后。重置处理函数总是硬件调用栈中的第一个栈帧；从它返回是未定义的行为，因为没有其它栈帧可以给它返回。通过让它变成一个divergent function，我们可以强调这个重置处理函数从来不会返回，divergent function的签名是 `fn(/* .. */) -> !` 。
+重置向量是一个指向重置处理函数的指针。重置处理函数是在一个系统重启后，或者第一次上电后，设备将会执行的函数。重置处理函数总是硬件调用栈中的第一个栈帧；从它返回是未定义的行为，因为没有其它栈帧可以给它返回。通过让它变成一个divergent function，我们可以强调这个重置处理函数从来不会返回，divergent function的签名是 `fn(/* .. */) -> !` 。
 
 ``` rust
 {{#include ../ci/memory-layout/src/main.rs:7:19}}
 ```
 
-我们通过使用 `extern "C"` 告诉编译器下面的函数使用C的ABI，而不是Rust的ABI，后者不稳定，将函数变成这里硬件期望的格式。
+我们通过使用 `extern "C"` 告诉编译器下面的函数使用C的ABI，而不是Rust的ABI，后者不稳定，将函数变成硬件期望的格式。
 
 为了从链接器脚本中指出重置处理函数和重置向量，我们需要它们有一个稳定的符号名因此我们使用 `#[no_mangle]` 。我们需要稍微控制下 `RESET_VECTOR` 的位置，因此我们将它放进一个已知的section中，`.vector_table.reset_vector` 。重置处理函数，`Reset` ，的确切位置不重要。我们只使用编译器默认生成的section 。
 

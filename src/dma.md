@@ -1,6 +1,6 @@
 # 直接存储器访问 (DMA)
 
-本节会围绕DMA传输，讨论搭建一个内存安全的API的核心需求。
+本节会围绕DMA传输，讨论要搭建一个内存安全的API的核心需求。
 
 DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来执行存储传输。一个DMA传输或多或少等于启动一个进程(看[`thread::spawn`])去执行一个`memcpy` 。我们将用fork-join模型去解释一个内存安全的API的要求。
 
@@ -119,7 +119,7 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 
 ## 编译器(误)优化
 
-编译器可以自由地重新排序和合并不是volatile的存储操作以更好地优化一个程序。使用我们现在的API，这个自由度会导致未定义的行为。想一下下面的例子：
+编译器可以自由地重新排序和合并不是volatile的存储操作以更好地优化一个程序。使用我们现在的API，这种自由度会导致未定义的行为。想一下下面的例子：
 
 ``` rust
 {{#include ../ci/dma/examples/three.rs:84:97}}
@@ -183,56 +183,47 @@ DMA外设被用来以并行于处理器的工作(主程序的执行)的方式来
 
 如果你的目标平台是一个多核系统，那么很可能你需要内存屏障。
 
-如果你需要存储屏障，那么你需要使用[`atomic::fence`]而不是`compiler_fence`。这在Cortex-M设备上会生成一个DMB指令。
+如果你需要内存屏障，那么你需要使用[`atomic::fence`]而不是`compiler_fence`。这在Cortex-M设备上会生成一个DMB指令。
 
 [`atomic::fence`]: https://doc.rust-lang.org/core/sync/atomic/fn.fence.html
 
-## Generic buffer
+## 泛化缓存
 
-Our API is more restrictive that it needs to be. For example, the following
-program won't be accepted even though it's valid.
+我们的API太受限了。比如，下面的程序即使是有效的也不会被通过。
 
 ``` rust
 {{#include ../ci/dma/examples/five.rs:67:85}}
 ```
 
-To accept such program we can make the buffer argument generic.
+为了能接受这样的程序，我们可以让缓存参数更泛化点。
 
 ``` rust
 {{#include ../ci/dma/examples/five.rs:9:65}}
 ```
 
-> **NOTE:** `AsRef<[u8]>` (`AsMut<[u8]>`) could have been used instead of
+> **注意:** 可以使用 `AsRef<[u8]>` (`AsMut<[u8]>`) 而不是
 > `AsSlice<Element = u8>` (`AsMutSlice<Element = u8`).
 
-Now the `reuse` program will be accepted.
+现在 `reuse` 程序可以通过了。
 
-## Immovable buffers
+## 不可移动的缓存
 
-With this modification the API will also accept arrays by value (e.g. `[u8;
-16]`). However, using arrays can result in pointer invalidation. Consider the
-following program.
-
+这么修改后，API也可以通过值传递接受数组。（比如 `[u8;
+16]`）。然后，使用数组会导致指针无效化。考虑下面的程序。
 ``` rust
 {{#include ../ci/dma/examples/five.rs:88:103}}
 {{#include ../ci/dma/examples/five.rs:105:112}}
 ```
 
-The `read_exact` operation will use the address of the `buffer` local to the
-`start` function. That local `buffer` will be freed when `start` returns and the
-pointer used in `read_exact` will become invalidated. You'll end up with a
-situation similar to the [`unsound`](#dealing-with-memforget) example.
+`read_exact` 操作将使用位于 `start` 函数的 `buffer` 的地址。当 `start` 返回时，局部的 `buffer` 将会被释放，在 `read_exact` 中使用的指针将会变得无效化。你最后会遇到与 [`unsound`](#dealing-with-memforget) 案例中一样的情况。
 
-To avoid this problem we require that the buffer used with our API retains its
-memory location even when it's moved. The [`Pin`] newtype provides such
-guarantee. We can update our API to required that all buffers are "pinned"
-first.
+为了避免这个问题，我们要求我们的API使用的缓存即使当它被移动时依然保有它的内存区域。[`Pin`] 类型提供这样的保障。首先我们可以更新我们的API以要求所有的缓存都是 "pinned" 的。
 
 [`Pin`]: https://doc.rust-lang.org/nightly/std/pin/index.html
 
-> **注意：** To compile all the programs below this point you'll need Rust
-> `>=1.33.0`. As of time of writing (2019-01-04) that means using the nightly
-> channel.
+> **注意：** 要编译下面的所有程序，你的Rust需要 
+> `>=1.33.0`。写这本书的时候 (2019-01-04) 这意味着要使用 nightly
+> 版的Rust
 
 ``` rust
 {{#include ../ci/dma/examples/six.rs:16:33}}
@@ -240,7 +231,7 @@ first.
 {{#include ../ci/dma/examples/six.rs:74:75}}
 ```
 
-> **注意：** We could have used the [`StableDeref`] trait instead of the `Pin`
+> **注意：** 我们可以使用 [`StableDeref`] 特质而不是 `Pin`
 > newtype but opted for `Pin` since it's provided in the standard library.
 
 [`StableDeref`]: https://crates.io/crates/stable_deref_trait

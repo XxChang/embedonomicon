@@ -1,7 +1,7 @@
 # 摘要
 
 [前言](./preface.md)
-- [最小的 `#![no_std]` 程序](./smallest-no-std.md)
+- [最简的 `#![no_std]` 程序](./smallest-no-std.md)
 - [存储布局](./memory-layout.md)
 - [一个 `main` 接口](./main.md)
 - [异常处理](./exceptions.md)

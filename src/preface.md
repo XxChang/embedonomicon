@@ -1,6 +1,6 @@
 # 嵌入式宝典
 
-嵌入式宝典将会带领你从零创造一个 `#![no_std]` 应用，体验为Coterx-M微控制器搭建特定于架构的功能的迭代过程。
+嵌入式宝典将会带领你从零创造一个 `#![no_std]` 应用，经历为Coterx-M微控制器搭建特定于架构的功能的开发迭代过程。
 
 ## 目的
 
@@ -18,7 +18,7 @@
 
 - 希望为生态系统还没有支持的架构提供板级支持(比如，自Rust 1.28以来的Cortex-R)，或者为一个刚获得Rust支持的架构提供帮助(比如 未来可能有Xtensa)的人
 
-- 对像是 [`cortex-m-rt`]，[`msp430-rt`] 和 [`riscv-rt`] 这样的 *runtime* 库的不寻常的实现感到好奇的人。 
+- 对形如 [`cortex-m-rt`]，[`msp430-rt`] 和 [`riscv-rt`] 这样的 *runtime* 库的不寻常的实现感到好奇的人。 
 
 [`cortex-m-rt`]: https://crates.io/crates/cortex-m-rt
 [`msp430-rt`]: https://crates.io/crates/msp430-rt
